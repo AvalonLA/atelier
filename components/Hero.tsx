@@ -6,7 +6,7 @@ const Hero: React.FC = () => {
     <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
         <img 
-          src="https://images.unsplash.com/photo-1631679706909-1844bbd07221?q=80&w=2070" 
+          src="/images/hero.jpg" 
           alt="MORK Modern Roller Curtains" 
           className="w-full h-full object-cover opacity-50 scale-110"
         />
