@@ -6,25 +6,25 @@ const historyItems = [
     year: '2018',
     title: 'THE GENESIS',
     description: 'Nacimiento de MORK en un pequeño estudio de diseño en La Plata, con la visión de reinventar la interacción con la luz solar.',
-    image: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800'
+    image: '/images/pexels-photo-3183150.webp'
   },
   {
     year: '2020',
     title: 'SMART REVOLUTION',
     description: 'Lanzamiento de nuestro primer sistema de motorización ultra-silencioso con integración neural.',
-    image: 'https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=800'
+    image: '/images/pexels-photo-3861969.webp'
   },
   {
     year: '2022',
     title: 'GLOBAL VISION',
     description: 'Expansión a proyectos arquitectónicos internacionales, vistiendo las fachadas de rascacielos inteligentes.',
-    image: 'https://images.pexels.com/photos/256150/pexels-photo-256150.jpeg?auto=compress&cs=tinysrgb&w=800'
+    image: '/images/pexels-photo-256150.webp'
   },
   {
     year: '2024',
     title: 'AI INTEGRATION',
     description: 'Integración total de Gemini AI para simulación de espacios y asesoramiento estético en tiempo real.',
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=800'
+    image: '/images/pexels-photo-8386440.webp'
   }
 ];
 

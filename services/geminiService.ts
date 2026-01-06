@@ -1,9 +1,15 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+const apiKey = process.env.API_KEY || '';
+const ai = new GoogleGenAI({ apiKey });
 
 export const getDesignAdvice = async (userPrompt: string, history: { role: 'user' | 'model', parts: { text: string }[] }[]) => {
+  if (!apiKey) {
+    console.log("No API Key detected. Returning mock response.");
+    return "Modo Demostración: Como no se ha detectado una API Key, estoy simulando ser MORK AI. Te recomendaría nuestras cortinas Roller Blackout Pro para máxima privacidad o las Sunscreen Architectural para gestionar la luz natural.";
+  }
+
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -28,6 +34,11 @@ export const getDesignAdvice = async (userPrompt: string, history: { role: 'user
 };
 
 export const visualizeCurtains = async (base64Image: string, productName: string, userPrompt: string) => {
+  if (!apiKey) {
+    console.log("No API Key detected. Skipping image generation.");
+    return null; 
+  }
+
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',

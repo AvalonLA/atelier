@@ -9,11 +9,11 @@ export const allProducts: Product[] = [
     category: 'blackout',
     description: 'Privacidad total y oscuridad absoluta con un acabado arquitectónico.',
     longDescription: 'Nuestras cortinas Roller Blackout Pro eliminan el 100% de la luz entrante gracias a su compuesto vinílico de alta densidad. Ideales para dormitorios y salas de proyección.',
-    image: 'https://images.pexels.com/photos/763147/pexels-photo-763147.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    image: '/images/pexels-photo-763147.webp',
     gallery: [
-      'https://images.pexels.com/photos/15135192/pexels-photo-15135192.jpeg',
-      'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg',
-      'https://images.pexels.com/photos/271816/pexels-photo-271816.jpeg'
+      '/images/pexels-photo-15135192.webp',
+      '/images/pexels-photo-1571460.webp',
+      '/images/pexels-photo-271816.webp'
     ],
     tag: 'MAX_DARKNESS',
     specs: [{ label: 'OPACIDAD', value: '100% BLACKOUT' }, { label: 'MOTORIZACIÓN', value: 'SILENT GEN' }]
@@ -24,11 +24,11 @@ export const allProducts: Product[] = [
     category: 'sunscreen',
     description: 'Modula la luz solar sin perder la conexión visual con el exterior.',
     longDescription: 'Filtra rayos UV mientras permite la entrada de luz difusa. Mantiene la visibilidad hacia afuera protegiendo la privacidad interior.',
-    image: 'https://images.pexels.com/photos/279640/pexels-photo-279640.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    image: '/images/pexels-photo-279640.webp',
     gallery: [
-      'https://images.pexels.com/photos/279640/pexels-photo-279640.jpeg',
-      'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg',
-      'https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg'
+      '/images/pexels-photo-279640.webp',
+      '/images/pexels-photo-271624.webp',
+      '/images/pexels-photo-271618.webp'
     ],
     tag: 'SOLAR_CONTROL',
     specs: [{ label: 'PROTECCIÓN UV', value: '97%' }, { label: 'FACTOR', value: '5%' }]
@@ -39,11 +39,11 @@ export const allProducts: Product[] = [
     category: 'zebra',
     description: 'Versatilidad total con bandas alternadas de luz y sombra.',
     longDescription: 'Control dinámico mediante bandas horizontales superpuestas. La solución más versátil para livings modernos.',
-    image: 'https://images.pexels.com/photos/29012618/pexels-photo-29012618.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    image: '/images/pexels-photo-29012618.webp',
     gallery: [
-      'https://images.pexels.com/photos/29012618/pexels-photo-29012618.jpeg',
-      'https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg',
-      'https://images.pexels.com/photos/1643384/pexels-photo-1643384.jpeg'
+      '/images/pexels-photo-29012618.webp',
+      '/images/pexels-photo-1643383.webp',
+      '/images/pexels-photo-1643384.webp'
     ],
     tag: 'VERSATILE',
     specs: [{ label: 'AJUSTE', value: 'DINÁMICO' }, { label: 'SISTEMA', value: 'DOUBLE' }]
@@ -54,10 +54,10 @@ export const allProducts: Product[] = [
     category: 'motorized',
     description: 'Automatización total para ventanales de gran formato.',
     longDescription: 'Sistemas inteligentes integrables con Alexa y Google Home para control remoto absoluto.',
-    image: 'https://images.pexels.com/photos/6775268/pexels-photo-6775268.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    image: '/images/pexels-photo-6775268.webp',
     gallery: [
-      'https://images.pexels.com/photos/6775268/pexels-photo-6775268.jpeg',
-      'https://images.pexels.com/photos/1571468/pexels-photo-1571468.jpeg'
+      '/images/pexels-photo-6775268.webp',
+      '/images/pexels-photo-1571468.webp'
     ],
     tag: 'SMART_HOME',
     specs: [{ label: 'INTEGRACIÓN', value: 'TOTAL' }, { label: 'MOTOR', value: 'DC 24V' }]
@@ -68,10 +68,10 @@ export const allProducts: Product[] = [
     category: 'sunscreen',
     description: 'Malla técnica de alto rendimiento térmico.',
     longDescription: 'Reduce la carga calórica hasta un 40% sin perder transparencia.',
-    image: 'https://images.pexels.com/photos/6045028/pexels-photo-6045028.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    image: '/images/pexels-photo-6045028.webp',
     gallery: [
-      'https://images.pexels.com/photos/6045028/pexels-photo-6045028.jpeg',
-      'https://images.pexels.com/photos/439227/pexels-photo-439227.jpeg'
+      '/images/pexels-photo-6045028.webp',
+      '/images/pexels-photo-439227.webp'
     ],
     tag: 'THERMAL_SHIELD',
     specs: [{ label: 'EFICIENCIA', value: 'A+' }, { label: 'DURABILIDAD', value: '15 AÑOS' }]
@@ -82,10 +82,10 @@ export const allProducts: Product[] = [
     category: 'blackout',
     description: 'Diseño industrial para oclusión total.',
     longDescription: 'Sistema de guías laterales que impide cualquier entrada lateral de luz.',
-    image: 'https://images.pexels.com/photos/6969824/pexels-photo-6969824.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+    image: '/images/pexels-photo-6969824.webp',
     gallery: [
-      'https://images.pexels.com/photos/6969824/pexels-photo-6969824.jpeg',
-      'https://images.pexels.com/photos/3773582/pexels-photo-3773582.jpeg'
+      '/images/pexels-photo-6969824.webp',
+      '/images/pexels-photo-29012618.webp'
     ],
     tag: 'TOTAL_DARK',
     specs: [{ label: 'SELLADO', value: 'HERMÉTICO' }, { label: 'ESTILO', value: 'MODERNO' }]
@@ -117,7 +117,7 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({ onSelectProduct, showAll = fa
       {showAll && (
         <div className="relative h-[60vh] flex items-center justify-center overflow-hidden mb-24">
           <img 
-            src="https://images.pexels.com/photos/276528/pexels-photo-276528.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" 
+            src="/images/pexels-photo-276528.webp" 
             alt="Collection Hero" 
             className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale"
           />

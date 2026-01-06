@@ -1,7 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
+import Lenis from 'lenis';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+
+// Add type declaration for window.lenis
+declare global {
+  interface Window {
+    lenis: any;
+  }
+}
+
 import FeatureGrid from './components/FeatureGrid';
 import FloatingAssistant from './components/FloatingAssistant';
 import ProductView from './components/ProductView';
@@ -12,6 +21,29 @@ import AdminPanel from './components/AdminPanel';
 import { Product } from './types';
 
 const App: React.FC = () => {
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+    });
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+    window.lenis = lenis;
+
+    return () => {
+      lenis.destroy();
+      window.lenis = null;
+    };
+  }, []);
+
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [currentView, setCurrentView] = useState<'home' | 'collection'>('home');
   const [isAdminOpen, setIsAdminOpen] = useState(false);
@@ -19,25 +51,38 @@ const App: React.FC = () => {
   const scrollToSection = (id: string) => {
     const element = document.querySelector(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      // Use Lenis scroll if available, otherwise fallback
+      if (window.lenis) {
+        window.lenis.scrollTo(element);
+      } else {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   };
 
-  const handleNavigation = (view: 'home' | 'collection' | 'about') => {
+  const handleNavigation = (view: 'home' | 'collection' | 'about' | 'contact') => {
     if (view === 'collection') {
       setCurrentView('collection');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (window.lenis) window.lenis.scrollTo(0);
+      else window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (view === 'about') {
       if (currentView !== 'home') {
         setCurrentView('home');
-        // Esperamos a que el DOM se actualice antes de scrollear
         setTimeout(() => scrollToSection('#about'), 100);
       } else {
         scrollToSection('#about');
       }
+    } else if (view === 'contact') {
+      if (currentView !== 'home') {
+        setCurrentView('home');
+        setTimeout(() => scrollToSection('#contact'), 100);
+      } else {
+        scrollToSection('#contact');
+      }
     } else {
       setCurrentView('home');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (window.lenis) window.lenis.scrollTo(0);
+      else window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -51,11 +96,12 @@ const App: React.FC = () => {
           e.preventDefault();
           
           if (href === '#') {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (window.lenis) window.lenis.scrollTo(0);
+            else window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
           }
 
-          if (currentView !== 'home' && (href === '#about' || href === '#contact-info' || href === '#showcase')) {
+          if (currentView !== 'home' && (href === '#about' || href === '#contact-info' || href === '#showcase' || href === '#contact')) {
             setCurrentView('home');
             setTimeout(() => scrollToSection(href), 100);
           } else {

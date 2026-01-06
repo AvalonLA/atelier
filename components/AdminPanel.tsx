@@ -87,7 +87,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-20 overflow-y-auto bg-[#080808]">
+      <main data-lenis-prevent className="flex-1 p-20 overflow-y-auto bg-[#080808]">
         <div className="max-w-6xl">
           {activeTab === 'dashboard' && (
             <div className="space-y-16 animate-in slide-in-from-bottom-4 duration-700">

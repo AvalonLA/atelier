@@ -82,7 +82,7 @@ const FloatingAssistant: React.FC = () => {
           </button>
         </div>
         
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+        <div ref={scrollRef} data-lenis-prevent className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
           {messages.map((m, i) => (
             <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-500`}>
               <div className={`max-w-[85%] p-4 text-[13px] font-light leading-relaxed shadow-sm ${

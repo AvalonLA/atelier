@@ -52,7 +52,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[110] bg-black overflow-y-auto animate-in fade-in duration-700">
+    <div data-lenis-prevent className="fixed inset-0 z-[110] bg-black overflow-y-auto animate-in fade-in duration-700">
       {/* Fullscreen Image Modal */}
       {fullscreenImage && (
         <div 
