@@ -8,11 +8,13 @@ import ProductView from './components/ProductView';
 import Footer from './components/Footer';
 import About from './components/About';
 import ContactInfo from './components/ContactInfo';
+import AdminPanel from './components/AdminPanel';
 import { Product } from './types';
 
 const App: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [currentView, setCurrentView] = useState<'home' | 'collection'>('home');
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   const scrollToSection = (id: string) => {
     const element = document.querySelector(id);
@@ -67,12 +69,12 @@ const App: React.FC = () => {
   }, [currentView]);
 
   useEffect(() => {
-    if (selectedProduct) {
+    if (selectedProduct || isAdminOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'auto';
     }
-  }, [selectedProduct]);
+  }, [selectedProduct, isAdminOpen]);
 
   return (
     <div className="animate-gradient min-h-screen selection:bg-white selection:text-black relative">
@@ -122,7 +124,7 @@ const App: React.FC = () => {
         </main>
       )}
 
-      <Footer />
+      <Footer onAdminOpen={() => setIsAdminOpen(true)} />
       <FloatingAssistant />
 
       {selectedProduct && (
@@ -130,6 +132,10 @@ const App: React.FC = () => {
           product={selectedProduct} 
           onClose={() => setSelectedProduct(null)} 
         />
+      )}
+
+      {isAdminOpen && (
+        <AdminPanel onClose={() => setIsAdminOpen(false)} />
       )}
       
       <style>{`

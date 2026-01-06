@@ -1,7 +1,11 @@
 
 import React from 'react';
 
-const Footer: React.FC = () => {
+interface FooterProps {
+  onAdminOpen?: () => void;
+}
+
+const Footer: React.FC<FooterProps> = ({ onAdminOpen }) => {
   return (
     <footer id="contact" className="bg-[#050505] text-white py-24 px-6 border-t border-white/5">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
@@ -33,9 +37,15 @@ const Footer: React.FC = () => {
 
       <div className="max-w-7xl mx-auto mt-24 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-[9px] font-futuristic tracking-[0.3em] text-neutral-600">
         <span>© 2024 MORK TECHNOLOGIES. ALL RIGHTS RESERVED.</span>
-        <div className="flex gap-8">
+        <div className="flex gap-8 items-center">
           <a href="#" className="hover:text-white transition-colors">PRIVACY</a>
           <a href="#" className="hover:text-white transition-colors">TERMS</a>
+          <button 
+            onClick={onAdminOpen}
+            className="hover:text-white transition-colors border border-white/10 px-4 py-1 hover:border-white/40"
+          >
+            ADMIN
+          </button>
         </div>
       </div>
     </footer>

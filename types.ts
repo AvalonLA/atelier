@@ -16,6 +16,15 @@ export interface ChatMessage {
   text: string;
 }
 
+export interface Consultation {
+  id: string;
+  customerName: string;
+  productName: string;
+  query: string;
+  date: string;
+  status: 'pending' | 'responded';
+}
+
 export enum NavigationSection {
   Hero = 'hero',
   Showcase = 'showcase',
