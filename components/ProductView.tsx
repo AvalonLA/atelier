@@ -1,7 +1,7 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Product } from '../types';
-import { visualizeCurtains } from '../services/geminiService';
+import { GeminiService } from '../services/geminiService';
 
 interface ProductViewProps {
   product: Product;
@@ -14,6 +14,8 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [resultImage, setResultImage] = useState<string | null>(null);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [selectedTheme, setSelectedTheme] = useState<string>("day");
+  const [galleryIndex, setGalleryIndex] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -42,19 +44,33 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
     };
   }, [onClose]);
 
-  // Handle ESC key for fullscreen modal
+  const allImages = useMemo(() => [product.image, ...product.gallery], [product]);
+
+  // Handle keys for fullscreen modal (ESC + Arrows)
   useEffect(() => {
     if (!fullscreenImage) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setFullscreenImage(null);
+      } else if (e.key === 'ArrowRight') {
+        const currentIndex = allImages.indexOf(fullscreenImage);
+        if (currentIndex !== -1) {
+          const nextIndex = (currentIndex + 1) % allImages.length;
+          setFullscreenImage(allImages[nextIndex]);
+        }
+      } else if (e.key === 'ArrowLeft') {
+        const currentIndex = allImages.indexOf(fullscreenImage);
+        if (currentIndex !== -1) {
+          const prevIndex = (currentIndex - 1 + allImages.length) % allImages.length;
+          setFullscreenImage(allImages[prevIndex]);
+        }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [fullscreenImage]);
+  }, [fullscreenImage, allImages]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -72,7 +88,9 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
     if (!userImage) return;
     setIsGenerating(true);
     try {
-      const result = await visualizeCurtains(userImage, product.name, clarification);
+      const themeText = selectedTheme === "day" ? "during daytime" : selectedTheme === "night" ? "at night" : "at sunset";
+      const fullPrompt = clarification ? `${clarification}. ${themeText}` : themeText;
+      const result = await GeminiService.visualizeCurtains(userImage, product.name, fullPrompt);
       setResultImage(result);
     } catch (error) {
       alert("Error al procesar la imagen. Intenta de nuevo.");
@@ -92,7 +110,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
   };
 
   return (
-    <div ref={modalRef} data-lenis-prevent className="fixed inset-0 z-[110] bg-black overflow-y-auto animate-in fade-in duration-700">
+    <div ref={modalRef} data-lenis-prevent className="fixed inset-0 z-[500] bg-black overflow-y-auto animate-in fade-in duration-700">
       {/* Fullscreen Image Modal */}
       {fullscreenImage && (
         <div 
@@ -137,7 +155,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
       </section>
 
       <section className="bg-white text-black py-32 px-8 md:px-20">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24">
+        <div className="max-w-5xl mx-auto flex flex-col gap-24">
           <div className="space-y-16">
             <div>
               <h3 className="font-futuristic text-[10px] tracking-[0.5em] text-neutral-400 mb-8 uppercase">ESPECIFICACIONES</h3>
@@ -167,75 +185,101 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
             </div>
           </div>
 
-          <div className="space-y-12 bg-neutral-50 p-12 border border-black/5 self-start sticky top-24">
-            <h3 className="font-futuristic text-[10px] tracking-[0.5em] text-neutral-400 mb-4 uppercase">AI ROOM VISUALIZER</h3>
-            <p className="text-sm font-light text-neutral-500 mb-8">Sube una foto de tu espacio y añade un prompt para que nuestra IA renderice las cortinas {product.name} en tu ambiente.</p>
+          {/* AI Room Visualizer Section */}
+          <div className="border-t border-black/10 pt-24">
+            <h3 className="font-futuristic text-[10px] tracking-[0.5em] text-neutral-400 mb-12 uppercase text-center">AI ROOM VISUALIZER</h3>
             
-            <div className="relative aspect-video bg-neutral-200 overflow-hidden flex items-center justify-center group">
-              {(resultImage || userImage) ? (
-                <div className="relative w-full h-full">
-                  <img 
-                    src={resultImage || userImage || ''} 
-                    className="w-full h-full object-cover cursor-zoom-in" 
-                    alt="Visualization" 
-                    onClick={() => setFullscreenImage(resultImage || userImage)}
-                  />
-                  {resultImage && (
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); handleDownload(); }}
-                      className="absolute bottom-4 right-4 bg-black/80 text-white p-3 rounded-full hover:bg-black transition-all group/dl shadow-lg border border-white/10"
-                      title="Descargar vista previa"
-                    >
-                      <svg className="w-5 h-5 group-hover/dl:translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <button onClick={() => fileInputRef.current?.click()} className="flex flex-col items-center gap-4 opacity-40 group-hover:opacity-100 transition-opacity">
-                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M12 4v16m8-8H4" /></svg>
-                  <span className="font-futuristic text-[9px] tracking-widest">SUBIR_FOTO_ESPACIO</span>
-                </button>
-              )}
-              {isGenerating && (
-                <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm z-20">
-                  <div className="text-center">
-                    <div className="w-12 h-12 border-2 border-white/20 border-t-white rounded-full animate-spin mb-4 mx-auto"></div>
-                    <span className="font-futuristic text-[10px] tracking-[0.4em] text-white">GENERANDO_AMBIENTE_VIRTUAL...</span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+               {/* Controls Column */}
+               <div className="space-y-8">
+                  {/* Upload Box */}
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="aspect-video bg-neutral-50 border border-dashed border-black/20 hover:border-black transition-colors cursor-pointer flex flex-col items-center justify-center group relative overflow-hidden"
+                  >
+                     {userImage ? (
+                        <img src={userImage} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity" />
+                     ) : (
+                        <div className="text-center space-y-4">
+                            <svg className="w-8 h-8 mx-auto opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M12 4v16m8-8H4"/></svg>
+                            <span className="font-futuristic text-[9px] tracking-widest text-neutral-400 block">SUBIR_FOTO_ESPACIO</span>
+                        </div>
+                     )}
+                     <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
                   </div>
-                </div>
-              )}
+
+                  {/* Render Controls - Only if image uploaded */}
+                  {userImage && (
+                    <div className="space-y-8 animate-in fade-in slide-in-from-top-4">
+                        <div className="space-y-4">
+                            <label className="font-futuristic text-[8px] tracking-[0.3em] text-neutral-400 uppercase block">1. VISIÓN_ALGORÍTMICA</label>
+                            <textarea 
+                                value={clarification} 
+                                onChange={(e) => setClarification(e.target.value)}
+                                placeholder="Describe el ambiente (ej: 'Minimalista, mucha luz, paredes blancas')..."
+                                className="w-full bg-neutral-50 border border-black/10 p-4 text-sm font-light focus:border-black focus:outline-none transition-colors min-h-[100px] resize-none"
+                            />
+                        </div>
+
+                        <div className="space-y-4">
+                            <label className="font-futuristic text-[8px] tracking-[0.3em] text-neutral-400 uppercase block">2. ESCENA_LUMÍNICA</label>
+                            <div className="grid grid-cols-3 gap-4">
+                               {/* Buttons with specific hover colors */}
+                               {[
+                                 { id: 'day', label: 'DÍA', color: 'bg-sky-300', text: 'text-black' },
+                                 { id: 'sunset', label: 'ATARDECER', color: 'bg-orange-400', text: 'text-white' },
+                                 { id: 'night', label: 'NOCHE', color: 'bg-black', text: 'text-white' }
+                               ].map((theme) => (
+                                 <button
+                                   key={theme.id}
+                                   onClick={() => setSelectedTheme(theme.id)}
+                                   className={`relative py-4 border border-black/10 overflow-hidden group transition-all duration-300 ${selectedTheme === theme.id ? 'border-transparent' : 'bg-white'}`}
+                                 >
+                                    <div className={`absolute inset-0 transition-transform duration-500 ease-out ${selectedTheme === theme.id ? `translate-y-0 ${theme.color}` : `translate-y-full group-hover:translate-y-0 ${theme.color}`}`} />
+                                    <span className={`relative z-10 font-futuristic text-[9px] tracking-widest transition-colors duration-300 ${selectedTheme === theme.id ? theme.text : 'text-neutral-500 group-hover:' + theme.text}`}>
+                                        {theme.label}
+                                    </span>
+                                 </button>
+                               ))}
+                            </div>
+                        </div>
+
+                        <button 
+                             onClick={handleVisualize}
+                             disabled={isGenerating}
+                             className="w-full bg-black text-white py-6 font-futuristic text-[10px] tracking-[0.3em] uppercase hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                        >
+                            {isGenerating ? 'PROCESANDO_SIMULACIÓN...' : '3. RENDERIZAR_ESPACIO'}
+                        </button>
+                    </div>
+                  )}
+               </div>
+
+               {/* Result Column */}
+               <div className="aspect-square bg-neutral-100 relative overflow-hidden border border-black/5">
+                  {resultImage ? (
+                      <div className="relative w-full h-full group">
+                          <img src={resultImage} className="w-full h-full object-cover cursor-zoom-in" onClick={() => setFullscreenImage(resultImage)} />
+                          <button 
+                            onClick={handleDownload}
+                            className="absolute bottom-6 right-6 bg-white text-black p-4 opacity-0 group-hover:opacity-100 transition-all duration-500 hover:bg-black hover:text-white"
+                          >
+                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                          </button>
+                      </div>
+                  ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="font-futuristic text-[9px] tracking-widest text-neutral-300 uppercase rotate-90 md:rotate-0">VISTA_PREVIA_RENDER</span>
+                      </div>
+                  )}
+                  
+                  {isGenerating && (
+                      <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-20 flex items-center justify-center">
+                          <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                      </div>
+                  )}
+               </div>
             </div>
-
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-
-            {userImage && !resultImage && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-top-4">
-                <div className="space-y-2">
-                  <label className="font-futuristic text-[8px] tracking-[0.3em] text-neutral-400 uppercase">PROMPT_DE_CONTEXTO</label>
-                  <textarea 
-                    value={clarification}
-                    onChange={(e) => setClarification(e.target.value)}
-                    placeholder="Ej: 'Habitación minimalista con mucha luz', 'Quiero que las cortinas se vean medio abiertas', 'Color grafito'..."
-                    className="w-full bg-white border border-black/10 p-4 outline-none focus:border-black transition-colors text-sm font-light min-h-[100px] resize-none"
-                  />
-                </div>
-                <button 
-                  onClick={handleVisualize}
-                  disabled={isGenerating}
-                  className="w-full py-5 bg-black text-white font-futuristic text-[10px] tracking-[0.3em] hover:bg-neutral-800 transition-all flex items-center justify-center gap-4 group"
-                >
-                  <span className="group-hover:tracking-[0.5em] transition-all">GENERAR_VISUALIZACIÓN_IA</span>
-                </button>
-                <button onClick={() => {setUserImage(null); setClarification('');}} className="w-full text-center text-[9px] font-futuristic tracking-widest opacity-40 hover:opacity-100 py-2 transition-opacity">REINICIAR_PROCESO</button>
-              </div>
-            )}
-            
-            {resultImage && (
-              <div className="flex gap-4 animate-in fade-in">
-                <button onClick={() => setResultImage(null)} className="flex-1 py-4 border border-black/10 font-futuristic text-[10px] tracking-[0.3em] hover:bg-black hover:text-white transition-all">MODIFICAR_PROMPT</button>
-                <button onClick={handleDownload} className="flex-1 py-4 bg-black text-white font-futuristic text-[10px] tracking-[0.3em] hover:bg-neutral-800 transition-all">DESCARGAR</button>
-              </div>
-            )}
           </div>
         </div>
       </section>

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { allProducts } from './FeatureGrid';
+import { allProducts } from '../data/products';
 import { Consultation } from '../types';
 
 const mockConsultations: Consultation[] = [

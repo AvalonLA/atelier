@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { getDesignAdvice } from '../services/geminiService';
+import ReactMarkdown from 'react-markdown';
+import { GeminiService } from '../services/geminiService';
 import { ChatMessage } from '../types';
 
 const FloatingAssistant: React.FC = () => {
@@ -47,23 +48,25 @@ const FloatingAssistant: React.FC = () => {
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setIsTyping(true);
 
-    const history = messages.map(m => ({
-      role: m.role,
-      parts: [{ text: m.text }]
-    }));
+    const history = messages
+      .filter((m, i) => !(i === 0 && m.role === 'model')) // Skip initial greeting to avoid API errors
+      .map(m => ({
+        role: m.role as 'user' | 'model',
+        parts: [{ text: m.text }]
+      }));
 
-    const response = await getDesignAdvice(userMsg, history);
+    const response = await GeminiService.getDesignAdvice(userMsg, history);
     setIsTyping(false);
     setMessages(prev => [...prev, { role: 'model', text: response || '' }]);
   };
 
   return (
-    <div ref={containerRef} className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[10000] flex flex-col items-end">
+    <div ref={containerRef} className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[10000] flex flex-col items-end pointer-events-none">
       {/* Ventana de Chat con Transiciones Smooth */}
       <div 
         className={`mb-4 md:mb-6 w-[calc(100vw-2rem)] md:w-[400px] h-[60vh] md:h-[450px] bg-white/95 backdrop-blur-2xl text-black shadow-[0_30px_100px_rgba(0,0,0,0.5)] flex flex-col border-none origin-bottom-right transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] rounded-t-2xl rounded-b-none ${
           isOpen 
-            ? 'opacity-100 scale-100 translate-y-0' 
+            ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' 
             : 'opacity-0 scale-90 translate-y-10 pointer-events-none'
         }`}
       >
@@ -90,7 +93,23 @@ const FloatingAssistant: React.FC = () => {
                   ? 'bg-black text-white rounded-l-2xl rounded-tr-2xl' 
                   : 'bg-neutral-100 text-black rounded-r-2xl rounded-tl-2xl'
               }`}>
-                {m.text}
+                {m.role === 'model' ? (
+                  <ReactMarkdown 
+                    components={{
+                      p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                      strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
+                      ul: ({node, ...props}) => <ul className="list-disc ml-4 mb-2" {...props} />,
+                      li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                      h1: ({node, ...props}) => <h1 className="text-lg font-bold mb-2 uppercase tracking-wider" {...props} />,
+                      h2: ({node, ...props}) => <h2 className="text-base font-bold mb-2 uppercase tracking-wide" {...props} />,
+                      h3: ({node, ...props}) => <h3 className="text-sm font-bold mb-1 uppercase" {...props} />,
+                    }}
+                  >
+                    {m.text}
+                  </ReactMarkdown>
+                ) : (
+                  m.text
+                )}
               </div>
             </div>
           ))}
@@ -134,7 +153,7 @@ const FloatingAssistant: React.FC = () => {
       {/* Botón Flotante */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className={`relative w-16 h-16 rounded-full flex items-center justify-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] shadow-2xl overflow-hidden group ${
+        className={`relative w-16 h-16 rounded-full flex items-center justify-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] shadow-2xl overflow-hidden group pointer-events-auto ${
           isOpen ? 'bg-white text-black scale-90 rotate-180' : 'bg-black text-white hover:scale-110'
         }`}
       >
