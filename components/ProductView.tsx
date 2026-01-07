@@ -25,7 +25,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
       }
     };
 
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
       if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
         onClose();
       }
@@ -33,10 +33,12 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
 
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
     };
   }, [onClose]);
 
