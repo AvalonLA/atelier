@@ -17,6 +17,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState<'dashboard' | 'collection' | 'consultations' | 'settings'>('dashboard');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(window.innerWidth < 768);
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Close on ESC or click outside
@@ -33,12 +34,20 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       }
     };
 
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsSidebarCollapsed(true);
+      }
+    };
+
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleResize);
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleResize);
     };
   }, [onClose]);
 

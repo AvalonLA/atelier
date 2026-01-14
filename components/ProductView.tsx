@@ -28,7 +28,12 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
     };
 
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      // Check if click is inside the floating assistant
+      const floatingAssistant = document.getElementById('floating-assistant-container');
+      const isClickInAssistant = floatingAssistant && floatingAssistant.contains(target);
+
+      if (modalRef.current && !modalRef.current.contains(target) && !isClickInAssistant) {
         onClose();
       }
     };
