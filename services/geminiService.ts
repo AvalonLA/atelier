@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 
 export class GeminiService {
@@ -21,21 +20,20 @@ export class GeminiService {
     return new GoogleGenAI({ apiKey: process.env.API_KEY });
   }
 
-  static async getDesignAdvice(prompt: string, history: { role: 'user' | 'model', parts: { text: string }[] }[]) {
+  static async getDesignAdvice(
+    prompt: string,
+    history: { role: "user" | "model"; parts: { text: string }[] }[],
+  ) {
     if (!this.isConfigured()) {
-        return "Modo Demostración: Como no se ha detectado una API Key, estoy simulando ser ATELIER AI. Te recomendaría nuestra línea Orbital Suspension para espacios centrales o Monolith Floor para iluminación ambiental. Visítanos en nuestro showroom.";
+      return "Modo Demostración: Como no se ha detectado una API Key, estoy simulando ser ATELIER AI. Te recomendaría nuestra línea Orbital Suspension para espacios centrales o Monolith Floor para iluminación ambiental. Visítanos en nuestro showroom.";
     }
     try {
       const ai = this.getAI();
       const response = await ai.models.generateContent({
         model: "gemini-1.5-flash",
-        contents: [
-            ...history,
-            { role: 'user', parts: [{ text: prompt }] }
-        ],
+        contents: [...history, { role: "user", parts: [{ text: prompt }] }],
         config: {
-          systemInstruction:
-            `Eres 'ATELIER AI', un consultor de iluminación arquitectónica para ATELIER.
+          systemInstruction: `Eres 'ATELIER AI', un consultor de iluminación arquitectónica para ATELIER.
         
             IDENTIDAD:
             - Tono: Sofisticado, técnico, artístico, minimalista. Hable de "temperatura de luz", "índice de reproducción cromática (CRI)", "lúmenes" y "atmósfera".
@@ -58,21 +56,28 @@ export class GeminiService {
       });
       return response.text;
     } catch (error: any) {
-      if (error.message === "API_KEY_MISSING") return "Error: API Key faltante.";
+      if (error.message === "API_KEY_MISSING")
+        return "Error: API Key faltante.";
       console.error("Gemini API Error:", error);
       return "Mis sistemas están recalibrando. Por favor intente nuevamente en unos instantes.";
     }
   }
 
   /**
-   * Simulates room visualization. 
+   * Simulates room visualization.
    * Real implementation would require an Image-to-Image model or specific Inpainting endpoint.
    */
-  static async visualizeLighting(base64Image: string, productName: string, userPrompt: string) {
-    console.log(`[GeminiService] Visualizing lighting for ${productName} with prompt: ${userPrompt}`);
-    
+  static async visualizeLighting(
+    base64Image: string,
+    productName: string,
+    userPrompt: string,
+  ) {
+    console.log(
+      `[GeminiService] Visualizing lighting for ${productName} with prompt: ${userPrompt}`,
+    );
+
     // Simulate processing delay for UX
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // Return original image for now (Mock)
     return base64Image;
