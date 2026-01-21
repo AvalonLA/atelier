@@ -1,8 +1,7 @@
-
 export interface Product {
   id: string;
   name: string;
-  category: 'pendant' | 'floor' | 'table' | 'tech';
+  category: "pendant" | "floor" | "table" | "tech";
   description: string;
   longDescription: string;
   image: string;
@@ -12,7 +11,7 @@ export interface Product {
 }
 
 export interface ChatMessage {
-  role: 'user' | 'model';
+  role: "user" | "model";
   text: string;
 }
 
@@ -22,12 +21,12 @@ export interface Consultation {
   productName: string;
   query: string;
   date: string;
-  status: 'pending' | 'responded';
+  status: "pending" | "responded";
 }
 
 export enum NavigationSection {
-  Hero = 'hero',
-  Showcase = 'showcase',
-  AI = 'ai',
-  Contact = 'contact'
+  Hero = "hero",
+  Showcase = "showcase",
+  AI = "ai",
+  Contact = "contact",
 }

@@ -5,7 +5,7 @@ import { ChatMessage } from '../types';
 
 const AIConsultant: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', text: 'Welcome to MORK Architecture. I am your AI Design Consultant. Describe your space, and I will suggest the perfect light control system.' }
+    { role: 'model', text: 'Bienvenido a ATELIER. Soy tu Consultor de Diseño IA. Describe tu espacio y te sugeriré la atmósfera lumínica perfecta.' }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);

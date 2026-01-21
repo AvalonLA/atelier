@@ -7,7 +7,7 @@ import { ChatMessage } from '../types';
 const FloatingAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', text: 'Bienvenido a MORK. Soy su asistente de diseño. ¿En qué espacio desea optimizar la luz hoy?' }
+    { role: 'model', text: 'Bienvenido a ATELIER. Soy su asistente de diseño. ¿Qué atmósfera lumínica desea crear hoy?' }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -73,7 +73,7 @@ const FloatingAssistant: React.FC = () => {
         <div className="p-6 border-b border-transparent flex justify-between items-center bg-black text-white">
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-            <span className="font-futuristic text-[9px] tracking-[0.4em]">MORK_NEURAL_CORE v1.2</span>
+            <span className="font-futuristic text-[9px] tracking-[0.4em]">ATELIER_NEURAL_CORE v1.2</span>
           </div>
           <button 
             onClick={() => setIsOpen(false)} 

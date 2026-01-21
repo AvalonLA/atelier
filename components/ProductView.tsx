@@ -95,7 +95,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
     try {
       const themeText = selectedTheme === "day" ? "during daytime" : selectedTheme === "night" ? "at night" : "at sunset";
       const fullPrompt = clarification ? `${clarification}. ${themeText}` : themeText;
-      const result = await GeminiService.visualizeCurtains(userImage, product.name, fullPrompt);
+      const result = await GeminiService.visualizeLighting(userImage, product.name, fullPrompt);
       setResultImage(result);
     } catch (error) {
       alert("Error al procesar la imagen. Intenta de nuevo.");
@@ -108,7 +108,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
     if (!resultImage) return;
     const link = document.createElement('a');
     link.href = resultImage;
-    link.download = `mork-visualization-${product.id}.png`;
+    link.download = `atelier-visualization-${product.id}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

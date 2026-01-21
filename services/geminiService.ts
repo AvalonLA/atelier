@@ -23,7 +23,7 @@ export class GeminiService {
 
   static async getDesignAdvice(prompt: string, history: { role: 'user' | 'model', parts: { text: string }[] }[]) {
     if (!this.isConfigured()) {
-        return "Modo Demostración: Como no se ha detectado una API Key, estoy simulando ser MORK AI. Te recomendaría nuestras cortinas Roller Blackout Pro para máxima privacidad o las Sunscreen Architectural para gestionar la luz natural. Visítanos en La Plata.";
+        return "Modo Demostración: Como no se ha detectado una API Key, estoy simulando ser ATELIER AI. Te recomendaría nuestra línea Orbital Suspension para espacios centrales o Monolith Floor para iluminación ambiental. Visítanos en nuestro showroom.";
     }
     try {
       const ai = this.getAI();
@@ -35,26 +35,25 @@ export class GeminiService {
         ],
         config: {
           systemInstruction:
-            `Eres 'MORK AI', un consultor de arquitectura e iluminación para MORK (Minimalist Window Tech).
+            `Eres 'ATELIER AI', un consultor de iluminación arquitectónica para ATELIER.
         
             IDENTIDAD:
-            - Tono: Profesional, minimalista, arquitectónico, sofisticado.
+            - Tono: Sofisticado, técnico, artístico, minimalista. Hable de "temperatura de luz", "índice de reproducción cromática (CRI)", "lúmenes" y "atmósfera".
             - Formato: Usa MARKDOWN para estructurar tu respuesta (negritas **texto**, listas bullets, etc).
             - RESTRICCIÓN: NO uses emojis ni iconos visuales en el texto.
             
             INFORMACIÓN DE LA EMPRESA:
-            - Ubicación: Calle 17 y 50 N° 903, La Plata.
-            - Horarios: Lunes a Viernes 09:00 - 18:00, Sábados 10:00 - 14:00.
-            - Enfoque: Control solar, privacidad, domótica, diseño minimalista.
+            - Concepto: "Arquitectura de la Luz". No vendemos lámparas, creamos atmósferas.
+            - Enfoque: Diseño paramétrico, LEDs de alta fidelidad, integración Smart Home (Matter/DALI).
             
             CATÁLOGO PRINCIPAL:
-            1. Roller Blackout Pro: Oscuridad total, privacidad máxima. Ideal dormitorios/proyección.
-            2. Sunscreen Architectural: Filtra UV, visión al exterior, luz difusa. Ideal livings/oficinas.
-            3. Zebra Dual Tech: Bandas alternadas para control dinámico de luz. Versatilidad.
-            4. Ultra Motorized: Automatización inteligente (recomienda esto para casas inteligentes).
+            1. PENDANT (Suspensión): Orbital, Linear. Para comedores, recepciones, doble altura.
+            2. FLOOR (Pie): Monolith, Arc. Luz indirecta, esculturas lumínicas.
+            3. TABLE (Mesa): Lumina, Task. Para trabajo de precisión o lectura.
+            4. TECH (Smart): Paneles modulares, tiras LED inteligentes.
     
             OBJETIVO:
-            Asesora al cliente sobre qué cortina elegir según su necesidad de luz y privacidad. Invítalos al showroom si piden ver muestras. Sé conciso.`,
+            Asesora al cliente sobre cómo esculpir el espacio con luz. Pregunta por el uso del espacio (trabajo, relax, social) y recomienda temperatura y tipo de luminaria.`,
         },
       });
       return response.text;
@@ -69,8 +68,8 @@ export class GeminiService {
    * Simulates room visualization. 
    * Real implementation would require an Image-to-Image model or specific Inpainting endpoint.
    */
-  static async visualizeCurtains(base64Image: string, productName: string, userPrompt: string) {
-    console.log(`[GeminiService] Visualizing ${productName} with prompt: ${userPrompt}`);
+  static async visualizeLighting(base64Image: string, productName: string, userPrompt: string) {
+    console.log(`[GeminiService] Visualizing lighting for ${productName} with prompt: ${userPrompt}`);
     
     // Simulate processing delay for UX
     await new Promise(resolve => setTimeout(resolve, 3000));
