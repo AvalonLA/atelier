@@ -27,7 +27,7 @@ const Hero: React.FC = () => {
       >
         <img 
           src="/images/hero.jpg" 
-          alt="MORK Modern Roller Curtains" 
+          alt="ATELIER Modern Lighting" 
           className="w-full h-full object-cover opacity-50" // Removed scale-110 as it is handled by parent style now
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black"></div>
@@ -38,18 +38,18 @@ const Hero: React.FC = () => {
         style={{ opacity }}
       >
         <h1 className="font-futuristic text-6xl md:text-[10rem] font-thin tracking-tighter leading-[0.85] mb-12">
-          M<span className="opacity-40 italic">O</span>RK <br /> 
-          <span className="text-4xl md:text-6xl tracking-[0.2em] font-light">ROLLER_TECH</span>
+          ATELIER <br /> 
+          <span className="text-4xl md:text-6xl tracking-[0.2em] font-light">LIGHTING_TECH</span>
         </h1>
         <p className="max-w-xl mx-auto text-neutral-400 font-light text-sm md:text-base tracking-[0.15em] leading-relaxed mb-16 uppercase">
-          La interfaz definitiva entre la luz natural y el confort interior con sistemas roller de alta precisión.
+          La interfaz definitiva entre la luz y el espacio. Sistemas de iluminación de alta precisión diseñados para el confort visual.
         </p>
         
         <div className="flex flex-col md:flex-row items-center justify-center gap-10">
           <a href="#showcase" className="group relative overflow-hidden px-12 py-5 border border-white/20 font-futuristic text-[9px] tracking-[0.4em] bg-white/5">
             <span className="relative z-10">EXPLORAR_COLECCIÓN</span>
             <div className="absolute inset-0 bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
-            <span className="absolute inset-0 flex items-center justify-center text-black opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20 font-futuristic text-[9px] tracking-[0.4em]">COLECCIÓN_ROLLER</span>
+            <span className="absolute inset-0 flex items-center justify-center text-black opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20 font-futuristic text-[9px] tracking-[0.4em]">COLECCIÓN_LUMÍNICA</span>
           </a>
         </div>
       </div>

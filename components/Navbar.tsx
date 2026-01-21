@@ -18,10 +18,10 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate }) => {
   }, []);
 
   const navLinks = [
-    { name: 'HOME', action: () => onNavigate('home') },
-    { name: 'COLLECTION', action: () => onNavigate('collection') },
-    { name: 'ABOUT', action: () => onNavigate('about') },
-    { name: 'CONTACT', action: () => onNavigate('contact') },
+    { name: 'INICIO', action: () => onNavigate('home') },
+    { name: 'COLECCIÓN', action: () => onNavigate('collection') },
+    { name: 'NOSOTROS', action: () => onNavigate('about') },
+    { name: 'CONTACTO', action: () => onNavigate('contact') },
     { name: 'ADMIN', action: () => onNavigate('admin') },
   ];
 
@@ -32,7 +32,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate }) => {
           onClick={() => onNavigate('home')} 
           className="font-futuristic text-2xl tracking-[0.3em] font-extralight group relative cursor-pointer"
         >
-          M<span className="group-hover:text-neutral-500 transition-colors duration-300">O</span>RK
+          ATELIER
         </button>
         
         <div className="hidden md:flex space-x-12 items-center">

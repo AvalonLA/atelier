@@ -95,9 +95,10 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({ onSelectProduct, showAll = fa
 
   const filters = [
     { id: 'all', label: 'TODOS' },
-    { id: 'blackout', label: 'BLACKOUT' },
-    { id: 'sunscreen', label: 'SUNSCREEN' },
-    { id: 'motorized', label: 'MOTORIZED' }
+    { id: 'pendant', label: 'COLGANTES' },
+    { id: 'floor', label: 'DE PIE' },
+    { id: 'table', label: 'DE MESA' },
+    { id: 'tech', label: 'SMART' }
   ];
 
   return (

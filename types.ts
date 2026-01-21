@@ -2,7 +2,7 @@
 export interface Product {
   id: string;
   name: string;
-  category: 'blackout' | 'sunscreen' | 'zebra' | 'motorized';
+  category: 'pendant' | 'floor' | 'table' | 'tech';
   description: string;
   longDescription: string;
   image: string;

@@ -40,11 +40,11 @@ const VisionSection: React.FC = () => {
            
             <div className="relative z-10 text-center max-w-4xl px-6">
                 <h2 className="text-3xl md:text-6xl font-extralight tracking-tight mb-16 italic opacity-60 uppercase leading-tight">
-                    Diseño que trasciende la función para convertirse en <span className="text-white opacity-100 not-italic">arquitectura.</span>
+                    Diseño que trasciende la función para convertirse en <span className="text-white opacity-100 not-italic">luz pura.</span>
                 </h2>
                 
                 <a href="#contact-info" className="text-2xl md:text-4xl font-extralight border-b border-white/20 hover:border-white transition-colors pb-4 inline-block uppercase group">
-                  SOLICITAR COTIZACIÓN <span className="italic opacity-30 group-hover:opacity-100 transition-opacity">_TECH</span>
+                  SOLICITAR ASESORAMIENTO <span className="italic opacity-30 group-hover:opacity-100 transition-opacity">_TECH</span>
                 </a>
             </div>
         </section>

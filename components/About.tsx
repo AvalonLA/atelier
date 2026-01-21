@@ -4,26 +4,26 @@ import React from 'react';
 const historyItems = [
   {
     year: '2018',
-    title: 'THE GENESIS',
-    description: 'Nacimiento de MORK en un pequeño estudio de diseño en La Plata, con la visión de reinventar la interacción con la luz solar.',
+    title: 'LA GÉNESIS',
+    description: 'Nacimiento de ATELIER en un pequeño estudio de diseño en La Plata, con la visión de reinventar la iluminación espacial.',
     image: '/images/pexels-photo-3183150.webp'
   },
   {
     year: '2020',
-    title: 'SMART REVOLUTION',
-    description: 'Lanzamiento de nuestro primer sistema de motorización ultra-silencioso con integración neural.',
+    title: 'REVOLUCIÓN SMART',
+    description: 'Lanzamiento de nuestro sistema de iluminación adaptativa con integración neural.',
     image: '/images/pexels-photo-3861969.webp'
   },
   {
     year: '2022',
-    title: 'GLOBAL VISION',
-    description: 'Expansión a proyectos arquitectónicos internacionales, vistiendo las fachadas de rascacielos inteligentes.',
+    title: 'VISIÓN GLOBAL',
+    description: 'Expansión a proyectos arquitectónicos internacionales, iluminando residencias y espacios corporativos de vanguardia.',
     image: '/images/pexels-photo-256150.webp'
   },
   {
     year: '2024',
-    title: 'AI INTEGRATION',
-    description: 'Integración total de Gemini AI para simulación de espacios y asesoramiento estético en tiempo real.',
+    title: 'INTEGRACIÓN IA',
+    description: 'Integración total de Gemini AI para simulación de ambientes y asesoramiento lumínico en tiempo real.',
     image: '/images/pexels-photo-8386440.webp'
   }
 ];
@@ -39,7 +39,7 @@ const About: React.FC = () => {
             LEGADO <span className="italic opacity-30">VIRTUAL.</span>
           </h1>
           <p className="max-w-2xl mx-auto text-neutral-400 font-light text-lg leading-relaxed">
-            MORK no es solo una marca de cortinas; es un laboratorio de ingeniería lumínica donde el futuro de la arquitectura se encuentra con la precisión técnica.
+            ATELIER no es solo una marca de iluminación; es un laboratorio de ingeniería lumínica donde el futuro de la arquitectura se encuentra con la precisión técnica.
           </p>
         </div>
       </section>
