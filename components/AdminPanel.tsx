@@ -3,44 +3,20 @@ import { allProducts } from "../data/products"; // In real app, this would come 
 import { Consultation } from "../types";
 import { AdminDashboard } from "./admin/AdminDashboard";
 import { AdminInventory } from "./admin/AdminInventory";
-
-// Mock Data preserved
-const mockConsultations: Consultation[] = [
-  {
-    id: "1",
-    customerName: "Julian Alvarez",
-    productName: "ORBITAL SUSPENSION",
-    query: "¿Hacen envíos a CABA?",
-    date: "2024-05-20",
-    status: "pending",
-  },
-  {
-    id: "2",
-    customerName: "Enzo Fernandez",
-    productName: "MONOLITH FLOOR",
-    query: "Necesito presupuesto para 3 salas de estar.",
-    date: "2024-05-19",
-    status: "responded",
-  },
-  {
-    id: "3",
-    customerName: "Lionel Messi",
-    productName: "AURORA SMART",
-    query: "¿Tienen stock en color titanio?",
-    date: "2024-05-18",
-    status: "pending",
-  },
-];
+import { AdminConsultations } from "./admin/AdminConsultations";
+import { AdminOrders } from "./admin/AdminOrders";
+import { useConfig } from "../context/ConfigContext";
 
 interface AdminPanelProps {
   onClose: () => void;
 }
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
+  const { config, updateLocalConfig } = useConfig();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [activeTab, setActiveTab] = useState<
-    "dashboard" | "collection" | "consultations" | "settings"
+    "dashboard" | "collection" | "orders" | "consultations" | "settings"
   >("dashboard");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
     window.innerWidth < 768,
@@ -104,7 +80,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
   if (!isAuthenticated) {
     return (
-      <div className="fixed inset-0 z-[9999] bg-white dark:bg-black flex items-center justify-center p-6 animate-in fade-in duration-500 text-black dark:text-white">
+      <div className="fixed inset-0 z-[50000] bg-white dark:bg-black flex items-center justify-center p-6 animate-in fade-in duration-500 text-black dark:text-white">
         <div className="max-w-md w-full p-12 border border-black/10 dark:border-white/10 bg-neutral-50 dark:bg-neutral-900 shadow-2xl relative">
           <button
             onClick={onClose}
@@ -159,7 +135,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-white dark:bg-black flex animate-in fade-in duration-700 text-black dark:text-white">
+    <div className="fixed inset-0 z-[50000] bg-white dark:bg-black flex animate-in fade-in duration-700 text-black dark:text-white">
       {/* Sidebar */}
       <aside
         className={`${isSidebarCollapsed ? "w-20" : "w-72"} border-r border-black/5 dark:border-white/5 flex flex-col transition-all duration-300 ease-in-out bg-neutral-50 dark:bg-[#050505] shrink-0 overflow-visible relative z-20`}
@@ -167,7 +143,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         <div
           className={`p-8 flex items-start ${isSidebarCollapsed ? "justify-center" : "justify-between"}`}
         >
-          {!isSidebarCollapsed && (
+          {isSidebarCollapsed ? (
+             <span className="font-futuristic text-xl tracking-widest animate-in fade-in duration-300">A</span>
+          ): (
             <div className="mb-0 animate-in fade-in duration-300">
               <h2 className="font-futuristic text-xl tracking-[0.3em] whitespace-nowrap">
                 ATELIER_OS
@@ -210,6 +188,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
               id: "collection",
               label: "COLLECTION",
               icon: "M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1v-2z",
+            },
+            {
+              id: "orders",
+              label: "ÓRDENES",
+              icon: "M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z",
             },
             {
               id: "consultations",
@@ -327,77 +310,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       >
         <div className="max-w-7xl mx-auto">
           {activeTab === "dashboard" && (
-            <AdminDashboard products={allProducts} />
+            <AdminDashboard />
           )}
 
           {activeTab === "collection" && <AdminInventory />}
 
-          {activeTab === "consultations" && (
-            <div className="space-y-12 animate-in slide-in-from-bottom-4 duration-700">
-              <div className="border-b border-black/5 dark:border-white/5 pb-8">
-                <h2 className="text-4xl font-thin tracking-tighter uppercase">
-                  CONSULTAS_INTERNAS
-                </h2>
-                <p className="font-futuristic text-[9px] tracking-widest text-neutral-600 mt-2">
-                  REGISTRO DE QUERIES DE CLIENTES
-                </p>
-              </div>
+          {activeTab === "orders" && <AdminOrders />}
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-black/5 dark:border-white/5 text-neutral-600">
-                      <th className="pb-6 font-futuristic text-[9px] tracking-widest font-normal uppercase">
-                        CLIENTE
-                      </th>
-                      <th className="pb-6 font-futuristic text-[9px] tracking-widest font-normal uppercase">
-                        PRODUCTO
-                      </th>
-                      <th className="pb-6 font-futuristic text-[9px] tracking-widest font-normal uppercase">
-                        CONSULTA
-                      </th>
-                      <th className="pb-6 font-futuristic text-[9px] tracking-widest font-normal uppercase">
-                        STATUS
-                      </th>
-                      <th className="pb-6 font-futuristic text-[9px] tracking-widest font-normal uppercase">
-                        ACCIÓN
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-black/5 dark:divide-white/5">
-                    {mockConsultations.map((c) => (
-                      <tr
-                        key={c.id}
-                        className="group hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                      >
-                        <td className="py-6 font-light text-sm">
-                          {c.customerName}
-                        </td>
-                        <td className="py-6 font-futuristic text-[10px] tracking-widest text-neutral-500">
-                          {c.productName}
-                        </td>
-                        <td className="py-6 font-light text-sm text-neutral-400 max-w-xs truncate">
-                          {c.query}
-                        </td>
-                        <td className="py-6">
-                          <span
-                            className={`font-futuristic text-[8px] tracking-widest py-1 px-3 rounded-full border ${c.status === "pending" ? "border-yellow-900 text-yellow-500" : "border-green-900 text-green-500"}`}
-                          >
-                            {c.status.toUpperCase()}
-                          </span>
-                        </td>
-                        <td className="py-6">
-                          <button className="font-futuristic text-[9px] tracking-widest text-neutral-500 hover:text-black dark:hover:text-white">
-                            RESPONDER
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+          {activeTab === "consultations" && <AdminConsultations />}
 
           {activeTab === "settings" && (
             <div className="space-y-12 animate-in slide-in-from-bottom-4 duration-700">
@@ -414,14 +334,38 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 <div className="space-y-10">
                   <div className="space-y-4">
                     <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 uppercase block">
-                      SITE_TITLE
+                      SITE_NAME
                     </label>
                     <input
                       type="text"
-                      defaultValue="ATELIER | Iluminación de Vanguardia"
+                      value={config.site_name}
+                      onChange={(e) => updateLocalConfig({ site_name: e.target.value })}
                       className="w-full bg-neutral-100 dark:bg-black border border-black/10 dark:border-white/10 p-4 outline-none focus:border-black dark:focus:border-white transition-colors text-sm font-light"
                     />
                   </div>
+                   <div className="space-y-4">
+                    <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 uppercase block">
+                      SITE_DESCRIPTION
+                    </label>
+                    <input
+                      type="text"
+                      value={config.site_description}
+                      onChange={(e) => updateLocalConfig({ site_description: e.target.value })}
+                      className="w-full bg-neutral-100 dark:bg-black border border-black/10 dark:border-white/10 p-4 outline-none focus:border-black dark:focus:border-white transition-colors text-sm font-light"
+                    />
+                  </div>
+                   <div className="space-y-4">
+                    <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 uppercase block">
+                      OPENING_HOURS
+                    </label>
+                    <input
+                      type="text"
+                      value={config.opening_hours}
+                      onChange={(e) => updateLocalConfig({ opening_hours: e.target.value })}
+                      className="w-full bg-neutral-100 dark:bg-black border border-black/10 dark:border-white/10 p-4 outline-none focus:border-black dark:focus:border-white transition-colors text-sm font-light"
+                    />
+                  </div>
+
                   <div className="space-y-4">
                     <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 uppercase block">
                       GLOBAL_THEME
@@ -439,30 +383,47 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                   </div>
                   <div className="space-y-4">
                     <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 uppercase block">
-                      AI_ASSISTANT_STATUS
+                      AI_FEATURES (CHAT & SIMULATION)
                     </label>
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-5 bg-neutral-200 dark:bg-white rounded-full relative">
-                        <div className="absolute top-1 right-1 w-3 h-3 bg-black rounded-full"></div>
+                    <div className="flex items-center gap-4 cursor-pointer" onClick={() => updateLocalConfig({ ai_active: !config.ai_active })}>
+                      <div className={`w-12 h-6 rounded-full relative transition-colors ${config.ai_active ? "bg-green-500" : "bg-neutral-300 dark:bg-neutral-700"}`}>
+                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-md ${config.ai_active ? "left-7" : "left-1"}`}></div>
                       </div>
-                      <span className="text-[10px] font-futuristic tracking-widest text-green-500">
-                        OPERATIONAL
+                      <span className={`text-[10px] font-futuristic tracking-widest transition-colors ${config.ai_active ? "text-green-500" : "text-neutral-500"}`}>
+                        {config.ai_active ? "ACTIVE" : "DISABLED"}
                       </span>
                     </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 uppercase block">
+                      DATA_SOURCE
+                    </label>
+                     <div className="flex items-center gap-4 cursor-pointer" onClick={() => updateLocalConfig({ use_mock_data: !config.use_mock_data })}>
+                       <div className={`w-12 h-6 rounded-full relative transition-colors ${!config.use_mock_data ? "bg-blue-500" : "bg-neutral-300 dark:bg-neutral-700"}`}>
+                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-md ${!config.use_mock_data ? "left-7" : "left-1"}`}></div>
+                      </div>
+                      <span className={`text-[10px] font-futuristic tracking-widest transition-colors ${!config.use_mock_data ? "text-blue-500" : "text-neutral-500"}`}>
+                        {!config.use_mock_data ? "SUPABASE (REAL)" : "MOCK DATA (LOCAL)"}
+                      </span>
+                    </div>
+                     <p className="text-[9px] text-neutral-400 mt-2">
+                      Cambia entre los datos de prueba locales y la base de datos real de Supabase.
+                    </p>
                   </div>
                 </div>
 
                 <div className="p-10 border border-black/5 dark:border-white/5 bg-neutral-50 dark:bg-black/40 h-fit">
                   <h4 className="font-futuristic text-[10px] tracking-widest mb-6 opacity-40">
-                    AUTO_BACKUP
+                    SYSTEM_STATUS
                   </h4>
                   <p className="text-xs font-light text-neutral-500 mb-8 leading-relaxed">
-                    Los cambios se sincronizan automáticamente con el núcleo
-                    neural cada 6 horas.
+                    La configuración se sincroniza en tiempo real con la base de datos distribuida.
+                    El estado de la IA afecta tanto al Chat como a la Simulación de Productos.
                   </p>
-                  <button className="w-full py-4 border border-black/10 dark:border-white/20 font-futuristic text-[9px] tracking-widest hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black transition-all">
-                    FORCE_REINDEX
-                  </button>
+                  <div className="text-[10px] font-futuristic tracking-widest text-neutral-400">
+                      ID_CONFIG: {config.id || "LOCAL"}
+                  </div>
                 </div>
               </div>
             </div>

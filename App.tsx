@@ -2,6 +2,10 @@ import Lenis from "lenis";
 import React, { useEffect, useState } from "react";
 import Hero from "./components/Hero";
 import Navbar from "./components/Navbar";
+import { CartProvider } from "./context/CartContext";
+import { ConfigProvider } from "./context/ConfigContext";
+import CartSidebar from "./components/CartSidebar";
+
 
 // Add type declaration for window.lenis
 declare global {
@@ -20,7 +24,7 @@ import ProductView from "./components/ProductView";
 import VisionSection from "./components/VisionSection";
 import { Product } from "./types";
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.2,
@@ -134,6 +138,7 @@ const App: React.FC = () => {
 
   return (
     <div className="animate-gradient min-h-screen selection:bg-white selection:text-black relative">
+      <CartSidebar />
       {!selectedProduct && !isAdminOpen && (
         <Navbar onNavigate={handleNavigation} />
       )}
@@ -195,6 +200,16 @@ const App: React.FC = () => {
         }
       `}</style>
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <ConfigProvider>
+      <CartProvider>
+        <AppContent />
+      </CartProvider>
+    </ConfigProvider>
   );
 };
 

@@ -1,6 +1,8 @@
 import React from "react";
+import { useConfig } from "../context/ConfigContext";
 
 const ContactInfo: React.FC = () => {
+  const { config } = useConfig();
   return (
     <section id="contact-info" className="py-32 px-6 bg-[#0a0a0a]">
       <div className="max-w-7xl mx-auto">
@@ -55,10 +57,7 @@ const ContactInfo: React.FC = () => {
                     HORARIOS
                   </h4>
                   <p className="text-sm font-light text-neutral-400">
-                    Lun a Vie: 09:00 — 18:00
-                  </p>
-                  <p className="text-sm font-light text-neutral-400">
-                    Sábados: 10:00 — 14:00
+                    {config.opening_hours}
                   </p>
                 </div>
               </div>

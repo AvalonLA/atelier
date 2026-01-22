@@ -2,20 +2,29 @@ import React, { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { GeminiService } from "../services/geminiService";
 import { ChatMessage } from "../types";
+import { useConfig } from "../context/ConfigContext";
 
 const FloatingAssistant: React.FC = () => {
+  const { config } = useConfig();
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "model",
-      text: "Bienvenido a ATELIER. Soy su asistente de diseño. ¿Qué atmósfera lumínica desea crear hoy?",
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]); // Initialize empty then set effect
+
+  useEffect(() => {
+     setMessages([
+        {
+            role: "model",
+            text: `Bienvenido a ${config.site_name}. Soy su asistente de diseño. ¿Qué atmósfera lumínica desea crear hoy?`,
+        },
+     ]);
+  }, [config.site_name]);
+
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  if (!config.ai_active) return null;
 
   // Auto-scroll al recibir mensajes
   useEffect(() => {

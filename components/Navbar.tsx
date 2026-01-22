@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useCart } from "../context/CartContext";
 
 interface NavbarProps {
   onNavigate: (
@@ -9,6 +10,7 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ onNavigate }) => {
   const [scrolled, setScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { items, setIsOpen } = useCart();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -48,6 +50,12 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate }) => {
               {link.name}
             </button>
           ))}
+          <button
+            onClick={() => setIsOpen(true)}
+            className="font-futuristic text-[11px] tracking-widest text-[#a3a3a3] hover:text-white transition-all duration-300 hover:tracking-[0.25em] cursor-pointer outline-none select-none flex items-center gap-2"
+          >
+            CART ({items.reduce((acc, item) => acc + item.quantity, 0)})
+          </button>
         </div>
 
         <button
@@ -64,7 +72,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate }) => {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth="1"
-              d="M4 6h16M4 12h16m-7 6h7"
+              d="M4 20L12 4L20 20M7 14h10"
             />
           </svg>
         </button>

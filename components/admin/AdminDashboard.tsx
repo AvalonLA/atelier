@@ -1,11 +1,14 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Product } from "../../types";
+import { InventoryService } from "../../services/supabase";
 
-interface AdminDashboardProps {
-  products: Product[];
-}
+export const AdminDashboard: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ products }) => {
+  useEffect(() => {
+    InventoryService.getProducts().then(setProducts).catch(console.error);
+  }, []);
+
   // Stats Calculation
   const totalProducts = products.length;
   const categories = products.reduce(

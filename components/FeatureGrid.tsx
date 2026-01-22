@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { allProducts } from "../data/products";
+// import { allProducts } from "../data/products"; // REMOVED: Using hook
 import { Product } from "../types";
+import { useProducts } from "../hooks/useProducts";
+import { TableRowSkeleton } from "./ui/AdminSkeletons";
 
 const ExpandingGridRow: React.FC<{
   products: Product[];
@@ -57,6 +59,7 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
   showAll = false,
   onShowAll,
 }) => {
+  const { products: allProducts, loading } = useProducts();
   const [filter, setFilter] = useState<string>("all");
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
@@ -109,6 +112,16 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
     { id: "table", label: "DE MESA" },
     { id: "tech", label: "SMART" },
   ];
+
+  if (loading) {
+      return (
+          <section id="showcase" className="py-24 bg-[#050505] min-h-screen flex items-center justify-center">
+              <div className="font-futuristic text-xs tracking-[0.3em] text-neutral-500 animate-pulse">
+                  LOADING_COLLECTION...
+              </div>
+          </section>
+      );
+  }
 
   return (
     <section

@@ -1,10 +1,12 @@
 import React from "react";
+import { useConfig } from "../context/ConfigContext";
 
 interface FooterProps {
   onAdminOpen?: () => void;
 }
 
 const Footer: React.FC<FooterProps> = ({ onAdminOpen }) => {
+  const { config } = useConfig();
   return (
     <footer
       id="contact"
@@ -12,12 +14,11 @@ const Footer: React.FC<FooterProps> = ({ onAdminOpen }) => {
     >
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
         <div className="col-span-1 md:col-span-2">
-          <h2 className="font-futuristic text-3xl tracking-[0.3em] font-extralight mb-8">
-            ATELIER
+          <h2 className="font-futuristic text-3xl tracking-[0.3em] font-extralight mb-8 uppercase">
+             {config.site_name}
           </h2>
           <p className="text-neutral-500 max-w-sm font-light text-sm leading-relaxed">
-            El futuro de la modulación lumínica. Diseñado en la era digital,
-            creado para la excelencia física.
+             {config.site_description}
           </p>
         </div>
 
@@ -53,8 +54,8 @@ const Footer: React.FC<FooterProps> = ({ onAdminOpen }) => {
             CONTACTO
           </h4>
           <ul className="space-y-4 font-light text-sm text-neutral-400">
-            <li>HOLA@ATELIER.TECH</li>
-            <li>+54 9 11 1234 5678</li>
+            <li className="uppercase">{config.contact_email}</li>
+            <li>{config.contact_phone}</li>
             <li>BUENOS AIRES, ARG</li>
           </ul>
         </div>

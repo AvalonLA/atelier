@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { GeminiService } from "../services/geminiService";
 import { Product } from "../types";
+import { useCart } from "../context/CartContext";
+import { useConfig } from "../context/ConfigContext";
 
 interface ProductViewProps {
   product: Product;
@@ -8,6 +10,8 @@ interface ProductViewProps {
 }
 
 const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
+  const { addItem, setIsOpen } = useCart();
+  const { config } = useConfig();
   const [userImage, setUserImage] = useState<string | null>(null);
   const [clarification, setClarification] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -139,9 +143,11 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
     <div
       ref={modalRef}
       data-lenis-prevent
-      className="fixed inset-0 z-[500] bg-black overflow-y-auto animate-in fade-in duration-700"
+      className="fixed inset-0 z-[50000] bg-black overflow-y-auto animate-in fade-in duration-700"
     >
+      <div className="fixed top-0 left-0 w-full h-24 bg-black z-[-1]" />
       {/* Fullscreen Image Modal */}
+
       {fullscreenImage && (
         <div
           className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4 md:p-10 cursor-zoom-out animate-in fade-in zoom-in-95 duration-300"
@@ -217,27 +223,61 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
 
       <section className="bg-white text-black py-32 px-8 md:px-20">
         <div className="max-w-5xl mx-auto flex flex-col gap-24">
-          <div className="space-y-16">
-            <div>
-              <h3 className="font-futuristic text-[10px] tracking-[0.5em] text-neutral-400 mb-8 uppercase">
-                ESPECIFICACIONES
-              </h3>
-              <p className="text-2xl md:text-4xl font-light leading-snug mb-12">
-                {product.longDescription}
-              </p>
-              <div className="grid grid-cols-2 gap-12">
-                {product.specs.map((spec, i) => (
-                  <div key={i} className="border-t border-black/10 pt-6">
-                    <span className="font-futuristic text-[9px] tracking-widest text-neutral-400 block mb-2">
-                      {spec.label}
-                    </span>
-                    <span className="text-lg font-light">{spec.value}</span>
-                  </div>
-                ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+            <div className="space-y-16">
+              <div>
+                <h3 className="font-futuristic text-[10px] tracking-[0.5em] text-neutral-400 mb-8 uppercase">
+                  ESPECIFICACIONES
+                </h3>
+                <p className="text-2xl md:text-3xl font-light leading-snug mb-12">
+                  {product.longDescription}
+                </p>
+                <div className="grid grid-cols-2 gap-12">
+                  {product.specs.map((spec, i) => (
+                    <div key={i} className="border-t border-black/10 pt-6">
+                      <span className="font-futuristic text-[9px] tracking-widest text-neutral-400 block mb-2">
+                        {spec.label}
+                      </span>
+                      <span className="text-sm font-medium">{spec.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-8">
+            <div className="md:sticky md:top-32 h-fit space-y-8 bg-neutral-50 p-8 rounded-lg animate-in slide-in-from-right-4 duration-1000">
+              <div className="space-y-2">
+                <span className="font-futuristic text-[10px] tracking-[0.3em] uppercase opacity-50">
+                  {product.category} COLLECTION
+                </span>
+                <h2 className="font-futuristic text-4xl uppercase font-light tracking-wide">
+                  {product.name}
+                </h2>
+                <div className="text-3xl font-light">
+                  ${product.category === "tech" ? "999" : "399"}
+                </div>
+              </div>
+              
+              <button
+                onClick={() => {
+                  addItem(product);
+                  setIsOpen(true);
+                  onClose();
+                }}
+                className="w-full bg-black text-white py-6 font-futuristic text-[11px] tracking-[0.4em] hover:bg-neutral-800 transition-colors"
+              >
+                AGREGAR AL CARRITO
+              </button>
+
+              <div className="text-[10px] text-neutral-400 font-light space-y-2 pt-4 border-t border-black/5">
+                <p>— ENVÍO INTERNACIONAL DISPONIBLE</p>
+                <p>— GARANTÍA DE 5 AÑOS</p>
+                <p>— INSTALACIÓN PROFESSIONAL RECOMENDADA</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8">
               {product.gallery.map((img, idx) => (
                 <div
                   key={idx}
@@ -252,7 +292,6 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
                 </div>
               ))}
             </div>
-          </div>
 
           {/* AI Room Visualizer Section */}
           <div className="border-t border-black/10 pt-24">
@@ -263,6 +302,19 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
               {/* Controls Column */}
               <div className="space-y-8">
+                { !config.ai_active ? (
+                    <div className="h-full flex items-center justify-center border border-dashed border-neutral-300 dark:border-white/10 p-12 text-center text-neutral-400">
+                        <div className="space-y-4">
+                             <svg className="w-8 h-8 mx-auto opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                             </svg>
+                             <p className="text-xs font-futuristic tracking-widest">
+                                 AI_MODULE_DISABLED
+                             </p>
+                        </div>
+                    </div>
+                ) : (
+                <>
                 {/* Upload Box */}
                 <div
                   onClick={() => fileInputRef.current?.click()}
@@ -371,6 +423,8 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
                         : "3. RENDERIZAR_ESPACIO"}
                     </button>
                   </div>
+                )}
+                </>
                 )}
               </div>
 
