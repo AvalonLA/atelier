@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Product } from "../types";
 import { useProducts } from "../hooks/useProducts";
 import { TableRowSkeleton } from "./ui/AdminSkeletons";
+import { useConfig } from "../context/ConfigContext";
+import { supabase } from "../services/supabase";
 
 const ExpandingGridRow: React.FC<{
   products: Product[];
@@ -62,9 +64,54 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
   onShowAll,
 }) => {
   const { products: allProducts, loading } = useProducts();
+  const { config, updateLocalConfig } = useConfig();
   const [filter, setFilter] = useState<string>("all");
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValues, setEditValues] = useState({
+      headline: "",
+      subheadline: ""
+  });
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setIsAdmin(!!session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setIsAdmin(!!session));
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+      if (!isEditing) {
+        if (showAll) {
+            setEditValues({
+                headline: config.catalog_headline_full || "SISTEMAS ATELIER.",
+                subheadline: config.catalog_description_full || "FILTROS_TÉCNICOS"
+            });
+        } else {
+            setEditValues({
+                headline: config.catalog_headline || "DISEÑO EXPANSIVO.",
+                subheadline: config.catalog_description || "LA COLECCIÓN"
+            });
+        }
+      }
+  }, [isEditing, showAll, config]);
+
+  const handleSave = async () => {
+    if (showAll) {
+        await updateLocalConfig({
+            catalog_headline_full: editValues.headline,
+            catalog_description_full: editValues.subheadline
+        });
+    } else {
+        await updateLocalConfig({
+            catalog_headline: editValues.headline,
+            catalog_description: editValues.subheadline
+        });
+    }
+    setIsEditing(false);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -128,8 +175,46 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
   return (
     <section
       id="showcase"
-      className="py-24 bg-[#050505] transition-all duration-1000 overflow-hidden"
+      className="py-24 bg-[#050505] transition-all duration-1000 overflow-hidden relative group/showcase"
     >
+       {/* Admin Controls */}
+       {isAdmin && (
+        <div className="absolute top-24 right-6 z-50 flex gap-2">
+            {!isEditing ? (
+                <button 
+                    onClick={() => setIsEditing(true)}
+                    className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all opacity-0 group-hover/showcase:opacity-100"
+                    title="Editar Sección"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                </button>
+            ) : (
+                <>
+                    <button 
+                        onClick={handleSave}
+                        className="p-2 bg-green-500/80 backdrop-blur-md rounded-full text-white hover:bg-green-500 transition-all"
+                        title="Guardar Cambios"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </button>
+                     <button 
+                        onClick={() => setIsEditing(false)}
+                        className="p-2 bg-red-500/80 backdrop-blur-md rounded-full text-white hover:bg-red-500 transition-all"
+                         title="Cancelar Edición"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </>
+            )}
+        </div>
+      )}
+
       {showAll && (
         <div className="relative h-[60vh] flex items-center justify-center overflow-hidden mb-24">
           <img
@@ -154,13 +239,26 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
         <div className="flex flex-col mb-16 gap-8 px-6">
           <div className="max-w-2xl">
             <h3 className="font-futuristic text-[10px] tracking-[0.5em] text-neutral-500 mb-4 uppercase">
-              {showAll ? "FILTROS_TÉCNICOS" : "LA COLECCIÓN"}
+              {isEditing ? (
+                  <input 
+                    value={editValues.subheadline}
+                    onChange={e => setEditValues({...editValues, subheadline: e.target.value})}
+                    className="bg-transparent border-b border-white/20 outline-none w-full focus:border-white transition-colors"
+                  />
+              ) : (
+                  <span>{showAll ? (config.catalog_description_full || "FILTROS_TÉCNICOS") : (config.catalog_description || "LA COLECCIÓN")}</span>
+              )}
             </h3>
             <h2 className="text-4xl md:text-8xl font-extralight tracking-tighter leading-none mb-12">
-              {showAll ? "SISTEMAS" : "DISEÑO"} <br />{" "}
-              <span className="opacity-40 italic">
-                {showAll ? "ATELIER." : "EXPANSIVO."}
-              </span>
+              {isEditing ? (
+                  <textarea 
+                    value={editValues.headline}
+                    onChange={e => setEditValues({...editValues, headline: e.target.value})}
+                    className="bg-transparent border border-white/20 outline-none w-full h-32 p-2 focus:border-white transition-colors text-4xl"
+                  />
+              ) : (
+                  <span dangerouslySetInnerHTML={{ __html: showAll ? (config.catalog_headline_full || "SISTEMAS <br/> <span class='opacity-40 italic'>ATELIER.</span>") : (config.catalog_headline || "DISEÑO <br/> <span class='opacity-40 italic'>EXPANSIVO.</span>") }} />
+              )}
             </h2>
 
             {showAll && (

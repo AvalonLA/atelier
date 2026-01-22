@@ -53,6 +53,19 @@ export interface AppConfig {
   hero_subheadline?: string;
   hero_text?: string;
   hero_image_url?: string;
+  about_headline?: string;
+  about_description?: string;
+  about_image_url?: string;
+  about_history?: { year: string; title: string; description: string; image: string }[];
+  catalog_headline?: string;
+  catalog_description?: string;
+  catalog_headline_full?: string;
+  catalog_description_full?: string;
+  contact_headline?: string;
+  contact_subheadline?: string;
+  contact_address?: string;
+  contact_map_url?: string;
+  vision_text?: string;
 }
 
 export enum NavigationSection {

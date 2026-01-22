@@ -21,6 +21,42 @@ const defaultConfig: AppConfig = {
   hero_subheadline: "LIGHTING_TECH",
   hero_text: "La interfaz definitiva entre la luz y el espacio. Sistemas de iluminación de alta precisión diseñados para el confort visual.",
   hero_image_url: "/images/hero.jpg",
+  about_headline: "LEGADO VIRTUAL.",
+  about_description: "ATELIER no es solo una marca de iluminación; es un laboratorio de ingeniería lumínica donde el futuro de la arquitectura se encuentra con la precisión técnica.",
+  about_history: [
+    {
+      year: "2018",
+      title: "LA GÉNESIS",
+      description: "Nacimiento de ATELIER en un pequeño estudio de diseño en La Plata, con la visión de reinventar la iluminación espacial.",
+      image: "/images/pexels-photo-3183150.webp",
+    },
+    {
+      year: "2020",
+      title: "REVOLUCIÓN SMART",
+      description: "Lanzamiento de nuestro sistema de iluminación adaptativa con integración neural.",
+      image: "/images/pexels-photo-3861969.webp",
+    },
+    {
+      year: "2022",
+      title: "VISIÓN GLOBAL",
+      description: "Expansión a proyectos arquitectónicos internacionales, iluminando residencias y espacios corporativos de vanguardia.",
+      image: "/images/pexels-photo-256150.webp",
+    },
+    {
+      year: "2024",
+      title: "INTEGRACIÓN IA",
+      description: "Integración total de Gemini AI para simulación de ambientes y asesoramiento lumínico en tiempo real.",
+      image: "/images/pexels-photo-8386440.webp",
+    },
+  ],
+  catalog_headline: "DISEÑO EXPANSIVO.",
+  catalog_description: "LA COLECCIÓN",
+  catalog_headline_full: "SISTEMAS ATELIER.",
+  catalog_description_full: "FILTROS_TÉCNICOS",
+  contact_headline: "UBICACIÓN_FLAGSHIP",
+  contact_subheadline: "ESTAMOS EN <br/> <span class='opacity-40 italic'>EL CENTRO.</span>",
+  contact_address: "Calle 12 y 50 N° 820, La Plata",
+  vision_text: "Diseño que trasciende la función para convertirse en <span class='text-white opacity-100 not-italic'>luz pura.</span>",
 };
 
 const ConfigContext = createContext<ConfigContextType>({

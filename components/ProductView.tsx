@@ -116,13 +116,34 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
       const fullPrompt = clarification
         ? `${clarification}. ${themeText}`
         : themeText;
-      const result = await GeminiService.visualizeLighting(
-        userImage,
-        product.name,
-        fullPrompt,
-      );
-      setResultImage(result);
+
+      // Convert product image to base64
+      let productBase64 = null;
+      try {
+          const response = await fetch(product.image);
+          const blob = await response.blob();
+          productBase64 = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(blob);
+          });
+      } catch (e) {
+          console.error("Failed to load product image for AI", e);
+      }
+
+      if (productBase64) {
+        const result = await GeminiService.visualizeLighting(
+            userImage,
+            productBase64,
+            product.name,
+            fullPrompt,
+        );
+        setResultImage(result);
+      } else {
+        alert("Error loading product image data.");
+      }
     } catch (error) {
+      console.error(error);
       alert("Error al procesar la imagen. Intenta de nuevo.");
     } finally {
       setIsGenerating(false);
