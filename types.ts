@@ -49,6 +49,10 @@ export interface AppConfig {
   opening_hours: string;
   ai_active: boolean; 
   use_mock_data: boolean;
+  hero_headline?: string;
+  hero_subheadline?: string;
+  hero_text?: string;
+  hero_image_url?: string;
 }
 
 export enum NavigationSection {

@@ -17,6 +17,10 @@ const defaultConfig: AppConfig = {
   opening_hours: "Lun - Vie: 10:00 - 19:00",
   ai_active: true,
   use_mock_data: true,
+  hero_headline: "ATELIER",
+  hero_subheadline: "LIGHTING_TECH",
+  hero_text: "La interfaz definitiva entre la luz y el espacio. Sistemas de iluminación de alta precisión diseñados para el confort visual.",
+  hero_image_url: "/images/hero.jpg",
 };
 
 const ConfigContext = createContext<ConfigContextType>({

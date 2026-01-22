@@ -252,7 +252,7 @@ const FloatingAssistant: React.FC = () => {
         ) : (
           <div className="relative">
             <span className="font-futuristic text-xl tracking-tighter group-hover:text-black transition-colors duration-500">
-              M
+              A
             </span>
             {/* Indicador de notificación */}
             <div className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full"></div>

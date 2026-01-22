@@ -31,7 +31,9 @@ export const AdminInventory: React.FC = () => {
             const data = await InventoryService.getProducts();
             setProducts(data);
         } catch (error) {
-            console.error(error);
+            console.error("Failed to load products from Supabase, falling back to mock:", error);
+            const { allProducts } = await import("../../data/products");
+            setProducts(allProducts);
         }
     } else {
          const { allProducts } = await import("../../data/products");

@@ -6,6 +6,7 @@ import { AdminInventory } from "./admin/AdminInventory";
 import { AdminConsultations } from "./admin/AdminConsultations";
 import { AdminOrders } from "./admin/AdminOrders";
 import { useConfig } from "../context/ConfigContext";
+import { supabase } from "../services/supabase";
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -14,10 +15,21 @@ interface AdminPanelProps {
 const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const { config, updateLocalConfig } = useConfig();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState("admin@atelier.com");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "collection" | "orders" | "consultations" | "settings"
   >("dashboard");
+
+  useEffect(() => {
+    // Check for existing session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setIsAuthenticated(true);
+      }
+    });
+  }, []); // Run once on mount
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
     window.innerWidth < 768,
   );
@@ -73,9 +85,27 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length > 0) setIsAuthenticated(true);
+    setIsLoading(true);
+    
+    try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        });
+
+        if (error) {
+            alert("Invalid credentials");
+        } else if (data.session) {
+            setIsAuthenticated(true);
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Login failed");
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   if (!isAuthenticated) {
@@ -104,7 +134,19 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
           <h2 className="font-futuristic text-xl tracking-[0.5em] text-center mb-12">
             ADMIN_ACCESS
           </h2>
-          <form onSubmit={handleLogin} className="space-y-8">
+          <form onSubmit={handleLogin} className="space-y-6">
+             <div className="space-y-2">
+              <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 block uppercase">
+                IDENTITY
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-white dark:bg-black border-b border-black/20 dark:border-white/20 py-3 outline-none focus:border-black dark:focus:border-white transition-colors text-sm font-light text-black dark:text-white"
+                placeholder="USER_ID"
+              />
+            </div>
             <div className="space-y-2">
               <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 block uppercase">
                 PASS_PHRASE
@@ -115,11 +157,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-white dark:bg-black border-b border-black/20 dark:border-white/20 py-3 outline-none focus:border-black dark:focus:border-white transition-colors text-sm font-light text-black dark:text-white"
-                placeholder="ANY_PASSWORD_WORKS"
+                placeholder="******"
               />
             </div>
-            <button className="w-full py-4 bg-black dark:bg-white text-white dark:text-black font-futuristic text-[10px] tracking-[0.3em] hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors">
-              VERIFY_IDENTITY
+            <button 
+                disabled={isLoading}
+                className="w-full py-4 bg-black dark:bg-white text-white dark:text-black font-futuristic text-[10px] tracking-[0.3em] hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors disabled:opacity-50"
+            >
+              {isLoading ? "VERIFYING..." : "VERIFY_IDENTITY"}
             </button>
             <button
               type="button"
@@ -240,46 +285,69 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         </nav>
 
         {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className={`font-futuristic text-[9px] tracking-[0.4em] text-neutral-500 hover:text-black dark:hover:text-white transition-colors flex items-center py-6 hover:bg-black/5 dark:hover:bg-white/5 ${isSidebarCollapsed ? "justify-center" : "px-8 gap-4"}`}
-          title={
-            theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
-          }
-        >
-          {theme === "dark" ? (
-            <svg
-              className="w-4 h-4 min-w-[1rem]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+        <div className="flex flex-col border-t border-black/5 dark:border-white/5">
+             <button
+              onClick={toggleTheme}
+              className={`font-futuristic text-[9px] tracking-[0.4em] text-neutral-500 hover:text-black dark:hover:text-white transition-colors flex items-center py-6 hover:bg-black/5 dark:hover:bg-white/5 ${isSidebarCollapsed ? "justify-center" : "px-8 gap-4"}`}
+              title={
+                theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
+              }
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-              />
-            </svg>
-          ) : (
-            <svg
-              className="w-4 h-4 min-w-[1rem]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+              {theme === "dark" ? (
+                <svg
+                  className="w-4 h-4 min-w-[1rem]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="w-4 h-4 min-w-[1rem]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                  />
+                </svg>
+              )}
+              {!isSidebarCollapsed && (
+                <span>{theme === "dark" ? "LIGHT_MODE" : "DARK_MODE"}</span>
+              )}
+            </button>
+            
+            <button
+              onClick={onClose}
+              className={`font-futuristic text-[9px] tracking-[0.4em] text-neutral-500 hover:text-black dark:hover:text-white transition-colors flex items-center py-6 hover:bg-black/5 dark:hover:bg-white/5 border-t border-black/5 dark:border-white/5 ${isSidebarCollapsed ? "justify-center" : "px-8 gap-4"}`}
+              title="Volver al Sitio"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-              />
-            </svg>
-          )}
-          {!isSidebarCollapsed && (
-            <span>{theme === "dark" ? "LIGHT_MODE" : "DARK_MODE"}</span>
-          )}
-        </button>
+               <svg
+                  className="w-4 h-4 min-w-[1rem]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+               {!isSidebarCollapsed && "RETURN"}
+            </button>
+        </div>
 
         <button
           onClick={onClose}
@@ -354,6 +422,43 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                       className="w-full bg-neutral-100 dark:bg-black border border-black/10 dark:border-white/10 p-4 outline-none focus:border-black dark:focus:border-white transition-colors text-sm font-light"
                     />
                   </div>
+
+                  <div className="space-y-4">
+                    <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 uppercase block">
+                      HERO_HEADLINE (MAIN TITLE)
+                    </label>
+                    <input
+                      type="text"
+                      value={config.hero_headline || ""}
+                      onChange={(e) => updateLocalConfig({ hero_headline: e.target.value })}
+                      className="w-full bg-neutral-100 dark:bg-black border border-black/10 dark:border-white/10 p-4 outline-none focus:border-black dark:focus:border-white transition-colors text-xl font-light"
+                      placeholder="ATELIER"
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 uppercase block">
+                      HERO_SUBHEADLINE
+                    </label>
+                    <input
+                      type="text"
+                      value={config.hero_subheadline || ""}
+                      onChange={(e) => updateLocalConfig({ hero_subheadline: e.target.value })}
+                      className="w-full bg-neutral-100 dark:bg-black border border-black/10 dark:border-white/10 p-4 outline-none focus:border-black dark:focus:border-white transition-colors text-sm font-light"
+                      placeholder="LIGHTING_TECH"
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 uppercase block">
+                      HERO_MAIN_TEXT
+                    </label>
+                    <textarea
+                      value={config.hero_text || ""}
+                      onChange={(e) => updateLocalConfig({ hero_text: e.target.value })}
+                      className="w-full bg-neutral-100 dark:bg-black border border-black/10 dark:border-white/10 p-4 outline-none focus:border-black dark:focus:border-white transition-colors text-sm font-light resize-none h-32"
+                      placeholder="Texto principal del Hero..."
+                    />
+                  </div>
+
                    <div className="space-y-4">
                     <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 uppercase block">
                       OPENING_HOURS

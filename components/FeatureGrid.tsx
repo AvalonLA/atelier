@@ -11,14 +11,16 @@ const ExpandingGridRow: React.FC<{
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   return (
-    <div className="flex flex-col lg:flex-row w-full h-[70vh] lg:h-[80vh] overflow-hidden">
+    <div 
+      className="flex flex-col lg:flex-row w-full h-[70vh] lg:h-[80vh] overflow-hidden" 
+      onMouseLeave={() => setExpandedIndex(null)}
+    >
       {products.map((p, i) => (
         <div
           key={p.id}
           onClick={() => onSelectProduct(p)}
           onMouseEnter={() => setExpandedIndex(i)}
-          onMouseLeave={() => setExpandedIndex(null)}
-          className={`group relative ${expandedIndex === i ? "flex-[3]" : "flex-[1]"} hover:flex-[3] transition-all duration-500 ease-in-out overflow-hidden border-r last:border-0 border-white/10 cursor-pointer`}
+          className={`group relative ${expandedIndex === i ? "flex-[3]" : "flex-[1]"} transition-all duration-500 ease-in-out overflow-hidden border-r last:border-0 border-white/10 cursor-pointer`}
         >
           <img
             src={p.image}
@@ -83,7 +85,7 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
     return filter === "all"
       ? allProducts
       : allProducts.filter((p) => p.category === filter);
-  }, [filter]);
+  }, [filter, allProducts]);
 
   const productChunks = useMemo(() => {
     const chunks = [];
