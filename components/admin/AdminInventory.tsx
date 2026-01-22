@@ -158,8 +158,6 @@ export const AdminInventory: React.FC = () => {
         </div>
       </div>
 
-      </div>
-
       {viewMode === "table" ? (
       <div className="overflow-x-auto border border-neutral-200 dark:border-neutral-800 rounded-lg">
         <table className="w-full text-left">
@@ -421,7 +419,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
           return {
             ...prev,
             gallery: newGallery,
-            image: prev.image || newGallery[0], // Set main if none exists
+            // If image is empty or not in current gallery, set to first item of new gallery
+            image: (prev.image && prev.gallery.includes(prev.image)) ? prev.image : newGallery[0], 
           };
         });
       } catch (err) {
@@ -600,7 +599,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth="1"
-                      d="M4 16l?4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                     />
                   </svg>
                   <span className="text-xs">Arrastra imágenes aquí</span>
@@ -633,10 +632,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   <img src={img} className="w-full h-full object-cover" />
                   <button
                     onClick={() =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        gallery: prev.gallery.filter((_, i) => i !== idx),
-                      }))
+                      setFormData((prev) => {
+                        const newGallery = prev.gallery.filter((_, i) => i !== idx);
+                        return {
+                            ...prev,
+                            gallery: newGallery,
+                            image: newGallery.length > 0 ? newGallery[0] : "",
+                        };
+                      })
                     }
                     className="absolute top-1 right-1 bg-black/50 hover:bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all z-20"
                   >
