@@ -22,6 +22,7 @@ import FloatingAssistant from "./components/FloatingAssistant";
 import Footer from "./components/Footer";
 import ProductView from "./components/ProductView";
 import VisionSection from "./components/VisionSection";
+import Checkout from "./components/Checkout";
 import { Product } from "./types";
 
 const AppContent: React.FC = () => {
@@ -49,7 +50,7 @@ const AppContent: React.FC = () => {
   }, []);
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [currentView, setCurrentView] = useState<"home" | "collection">("home");
+  const [currentView, setCurrentView] = useState<"home" | "collection" | "checkout">("home");
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   const scrollToSection = (id: string) => {
@@ -65,10 +66,14 @@ const AppContent: React.FC = () => {
   };
 
   const handleNavigation = (
-    view: "home" | "collection" | "about" | "contact" | "admin",
+    view: "home" | "collection" | "about" | "contact" | "admin" | "checkout",
   ) => {
     if (view === "collection") {
       setCurrentView("collection");
+      if (window.lenis) window.lenis.scrollTo(0);
+      else window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (view === "checkout") {
+      setCurrentView("checkout");
       if (window.lenis) window.lenis.scrollTo(0);
       else window.scrollTo({ top: 0, behavior: "smooth" });
     } else if (view === "about") {
@@ -138,7 +143,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="animate-gradient min-h-screen selection:bg-white selection:text-black relative">
-      <CartSidebar />
+      <CartSidebar onCheckout={() => handleNavigation("checkout")} />
       {!selectedProduct && !isAdminOpen && (
         <Navbar onNavigate={handleNavigation} />
       )}
@@ -172,6 +177,8 @@ const AppContent: React.FC = () => {
 
           <VisionSection />
         </main>
+      ) : currentView === "checkout" ? (
+         <Checkout />
       ) : (
         <main className="pt-20 animate-in slide-in-from-bottom-10 duration-1000 min-h-screen">
           <FeatureGrid onSelectProduct={setSelectedProduct} showAll={true} />

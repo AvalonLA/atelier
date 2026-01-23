@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useCart } from "../context/CartContext";
 
-const CartSidebar: React.FC = () => {
+const CartSidebar: React.FC<{ onCheckout?: () => void }> = ({ onCheckout }) => {
   const { isOpen, setIsOpen, items, updateQuantity, total } = useCart();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -17,8 +17,10 @@ const CartSidebar: React.FC = () => {
   }, [isOpen]);
 
   const handleCheckout = () => {
-    // Implement checkout logic here or navigate to checkout page
-    alert("Checkout functionality coming soon");
+    setIsOpen(false);
+    if (onCheckout) {
+        onCheckout();
+    }
   };
 
   return (
