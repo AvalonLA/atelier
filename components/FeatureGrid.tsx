@@ -5,8 +5,8 @@ import { useConfig } from "../context/ConfigContext";
 import { useProducts } from "../hooks/useProducts";
 import { supabase } from "../services/supabase";
 import { Product } from "../types";
-import RichTextEditor from "./ui/RichTextEditor";
 import { optimizeImage } from "../utils/imageOptimizer";
+import RichTextEditor from "./ui/RichTextEditor";
 
 const ExpandingGridRow: React.FC<{
   products: Product[];
@@ -70,9 +70,9 @@ const ExpandingGridRow: React.FC<{
                   {p.description}
                 </p>
                 {p.price && (
-                   <p className="font-futuristic text-lg lg:text-xl font-bold">
-                     ${p.price.toLocaleString()}
-                   </p>
+                  <p className="font-futuristic text-lg lg:text-xl font-bold">
+                    ${p.price.toLocaleString()}
+                  </p>
                 )}
               </div>
             </div>
@@ -100,27 +100,28 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [advancedFilters, setAdvancedFilters] = useState<Record<string, string[]>>({});
+  const [advancedFilters, setAdvancedFilters] = useState<
+    Record<string, string[]>
+  >({});
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  
+
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
-      const handleScroll = () => {
-          setScrollY(window.scrollY);
-      };
-      
-      window.addEventListener("scroll", handleScroll);
-      return () => window.removeEventListener("scroll", handleScroll);
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const heroOpacity = Math.max(0, 1 - scrollY / 600);
   const heroScale = Math.max(1, 1.1 - scrollY / 2000);
-
 
   // Toggle Advanced Filter
   const toggleAdvancedFilter = (category: string, value: string) => {
@@ -269,12 +270,11 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
         (p) =>
           p.name.toLowerCase().includes(q) ||
           p.description.toLowerCase().includes(q) ||
-          p.longDescription.toLowerCase().includes(q)
+          p.longDescription.toLowerCase().includes(q),
       );
     }
     return result;
   }, [filter, allProducts, searchQuery, advancedFilters]);
-
 
   const productChunks = useMemo(() => {
     const chunks = [];
@@ -429,39 +429,44 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
 
       {showAll && (
         <div className="relative h-screen w-full flex items-center justify-center overflow-hidden mb-24 group/hero">
-          <div 
+          <div
             className="absolute inset-0 w-full h-full"
             style={{
-                transform: `scale(${heroScale})`
+              transform: `scale(${heroScale})`,
             }}
           >
             <img
-                src={
+              src={
                 isEditing
-                    ? editValues.collectionImage
-                    : config.collection_hero_image_url ||
+                  ? editValues.collectionImage
+                  : config.collection_hero_image_url ||
                     "/images/pexels-photo-276528.webp"
-                }
-                alt="Collection Hero"
-                className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale"
+              }
+              alt="Collection Hero"
+              className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale"
             />
-             <div className="absolute inset-0 bg-black/60"></div>
+            <div className="absolute inset-0 bg-black/60"></div>
           </div>
-          
-          <div 
-             className="relative z-10 text-center space-y-4"
-             style={{ opacity: heroOpacity, transform: `translateY(${scrollY * 0.5}px)` }}
+
+          <div
+            className="relative z-10 text-center space-y-4"
+            style={{
+              opacity: heroOpacity,
+              transform: `translateY(${scrollY * 0.5}px)`,
+            }}
           >
             {isEditing ? (
               <div className="flex flex-col items-center gap-4 w-full">
-                 <RichTextEditor
-                    tagName="h1"
-                    initialValue={editValues.collectionHeadline}
-                    onChange={(val) => setEditValues({ ...editValues, collectionHeadline: val })}
-                    className="font-futuristic text-5xl md:text-8xl tracking-tighter uppercase font-thin bg-transparent border border-white/20 text-center w-full max-w-5xl h-auto min-h-[10rem] p-4 focus:border-white focus:outline-none"
-                    placeholder="TITULO CATALOGO..."
-                 />
-                 <input
+                <RichTextEditor
+                  tagName="h1"
+                  initialValue={editValues.collectionHeadline}
+                  onChange={(val) =>
+                    setEditValues({ ...editValues, collectionHeadline: val })
+                  }
+                  className="font-futuristic text-5xl md:text-8xl tracking-tighter uppercase font-thin bg-transparent border border-white/20 text-center w-full max-w-5xl h-auto min-h-[10rem] p-4 focus:border-white focus:outline-none"
+                  placeholder="TITULO CATALOGO..."
+                />
+                <input
                   value={editValues.collectionSubheadline}
                   onChange={(e) =>
                     setEditValues({
@@ -517,13 +522,15 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
             </h3>
             <h2 className="text-4xl md:text-8xl font-extralight tracking-tighter leading-none mb-12">
               {isEditing ? (
-                 <RichTextEditor
-                    tagName="h2"
-                    initialValue={editValues.headline}
-                    onChange={(val) => setEditValues({ ...editValues, headline: val })}
-                    className="bg-transparent border border-white/20 outline-none w-full h-auto min-h-[8rem] focus:border-white transition-colors p-2 text-4xl font-extralight tracking-tighter"
-                    placeholder="TITULO PRINCIPAL..."
-                 />
+                <RichTextEditor
+                  tagName="h2"
+                  initialValue={editValues.headline}
+                  onChange={(val) =>
+                    setEditValues({ ...editValues, headline: val })
+                  }
+                  className="bg-transparent border border-white/20 outline-none w-full h-auto min-h-[8rem] focus:border-white transition-colors p-2 text-4xl font-extralight tracking-tighter"
+                  placeholder="TITULO PRINCIPAL..."
+                />
               ) : (
                 <span
                   dangerouslySetInnerHTML={{
@@ -548,21 +555,26 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
                   </button>
 
                   <div className="relative group">
-                     <input
-                        type="text"
-                        placeholder="BUSCAR_DISEÑO..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="bg-transparent border-b border-white/10 text-white font-futuristic text-[10px] tracking-widest uppercase w-48 focus:w-64 focus:border-white outline-none transition-all py-1 pl-6"
+                    <input
+                      type="text"
+                      placeholder="BUSCAR_DISEÑO..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="bg-transparent border-b border-white/10 text-white font-futuristic text-[10px] tracking-widest uppercase w-48 focus:w-64 focus:border-white outline-none transition-all py-1 pl-6"
+                    />
+                    <svg
+                      className="w-3 h-3 text-white/50 absolute left-0 top-1/2 -translate-y-1/2 pointer-events-none"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                       />
-                      <svg 
-                        className="w-3 h-3 text-white/50 absolute left-0 top-1/2 -translate-y-1/2 pointer-events-none"
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
+                    </svg>
                   </div>
                 </div>
 
@@ -617,7 +629,12 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
                             {[
                               {
                                 label: "Material",
-                                options: ["METAL", "VIDRIO", "MADERA", "HORMIGÓN"],
+                                options: [
+                                  "METAL",
+                                  "VIDRIO",
+                                  "MADERA",
+                                  "HORMIGÓN",
+                                ],
                               },
                               {
                                 label: "Color Temp",
