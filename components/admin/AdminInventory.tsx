@@ -6,7 +6,11 @@ import { Product } from "../../types";
 import { optimizeImage } from "../../utils/imageOptimizer";
 import { TableRowSkeleton } from "../ui/AdminSkeletons";
 
-export const AdminInventory: React.FC = () => {
+interface AdminInventoryProps {
+  onUpdate?: () => void;
+}
+
+export const AdminInventory: React.FC<AdminInventoryProps> = ({ onUpdate }) => {
   const { config } = useConfig();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -166,6 +170,7 @@ export const AdminInventory: React.FC = () => {
       );
       setIsBulkEditOpen(false);
       setSelectedProducts([]);
+      if (onUpdate) onUpdate();
     } catch (e) {
       console.error(e);
       toast.error("ERROR AL ACTUALIZAR PRECIOS");
@@ -201,6 +206,7 @@ export const AdminInventory: React.FC = () => {
       setIsModalOpen(false);
       setEditingProduct(null);
       toast.success("INVENTARIO ACTUALIZADO");
+      if (onUpdate) onUpdate();
     } catch (error) {
       console.error("Failed to save product:", error);
       toast.error("ERROR AL GUARDAR EL PRODUCTO");

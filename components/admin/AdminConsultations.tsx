@@ -5,7 +5,13 @@ import { ConsultationService, supabase } from "../../services/supabase";
 import { Consultation, Product } from "../../types";
 import { TableRowSkeleton } from "../ui/AdminSkeletons";
 
-export const AdminConsultations: React.FC = () => {
+interface AdminConsultationsProps {
+  onUpdate?: () => void;
+}
+
+export const AdminConsultations: React.FC<AdminConsultationsProps> = ({
+  onUpdate,
+}) => {
   const { products } = useProducts();
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,6 +95,7 @@ export const AdminConsultations: React.FC = () => {
       setConsultations((prev) => prev.filter((c) => c.id !== itemToDelete));
       setIsDeleteModalOpen(false);
       setItemToDelete(null);
+      if (onUpdate) onUpdate();
     } catch (error) {
       console.error("Error deleting:", error);
     }
@@ -109,6 +116,7 @@ export const AdminConsultations: React.FC = () => {
     );
     try {
       await ConsultationService.updateStatus(id, newStatus);
+      if (onUpdate) onUpdate();
     } catch (e) {
       console.error("Error updating status:", e);
       // Revert on error could be added here
@@ -144,6 +152,7 @@ export const AdminConsultations: React.FC = () => {
       setIsFormOpen(false);
       setEditingItem(null);
       toast.success("CONSULTA GUARDADA");
+      if (onUpdate) onUpdate();
     } catch (e) {
       console.error(e);
       toast.error("ERROR AL GUARDAR");

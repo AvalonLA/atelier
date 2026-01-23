@@ -8,7 +8,11 @@ import {
 import { Order, Product, SaleItem } from "../../types";
 import { TableRowSkeleton } from "../ui/AdminSkeletons";
 
-export const AdminOrders: React.FC = () => {
+interface AdminOrdersProps {
+  onUpdate?: () => void;
+}
+
+export const AdminOrders: React.FC<AdminOrdersProps> = ({ onUpdate }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -100,6 +104,7 @@ export const AdminOrders: React.FC = () => {
       setIsDeleteModalOpen(false);
       setOrderToDelete(null);
       toast.success("ORDEN ELIMINADA");
+      if (onUpdate) onUpdate();
     } catch (e) {
       console.error(e);
       toast.error("ERROR AL ELIMINAR");
@@ -146,6 +151,7 @@ export const AdminOrders: React.FC = () => {
       setIsFormOpen(false);
       setEditingOrder(null);
       toast.success("ORDEN GUARDADA");
+      if (onUpdate) onUpdate();
     } catch (e) {
       console.error(e);
       toast.error("ERROR AL GUARDAR");

@@ -35,31 +35,31 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     });
   }, []); // Run once on mount
 
+  const fetchCounts = React.useCallback(async () => {
+    const { count: ordersCount } = await supabase
+      .from("orders")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "pending");
+
+    const { count: consultationsCount } = await supabase
+      .from("consultations")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "pending");
+
+    const { count: lowStockCount } = await supabase
+      .from("products")
+      .select("*", { count: "exact", head: true })
+      .lt("stock", 5);
+
+    setCounts({
+      orders: ordersCount || 0,
+      consultations: consultationsCount || 0,
+      lowStock: lowStockCount || 0,
+    });
+  }, []);
+
   useEffect(() => {
     if (isAuthenticated) {
-      const fetchCounts = async () => {
-        const { count: ordersCount } = await supabase
-          .from("orders")
-          .select("*", { count: "exact", head: true })
-          .eq("status", "pending");
-
-        const { count: consultationsCount } = await supabase
-          .from("consultations")
-          .select("*", { count: "exact", head: true })
-          .eq("status", "pending");
-
-        const { count: lowStockCount } = await supabase
-          .from("products")
-          .select("*", { count: "exact", head: true })
-          .lt("stock", 5);
-
-        setCounts({
-          orders: ordersCount || 0,
-          consultations: consultationsCount || 0,
-          lowStock: lowStockCount || 0,
-        });
-      };
-
       fetchCounts();
 
       // Subscribe to changes in Orders, Consultations and Products tables
@@ -92,7 +92,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         supabase.removeChannel(channel);
       };
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchCounts]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
     window.innerWidth < 768,
   );
@@ -462,11 +462,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         <div className="max-w-7xl mx-auto">
           {activeTab === "dashboard" && <AdminDashboard />}
 
-          {activeTab === "collection" && <AdminInventory />}
+          {activeTab === "collection" && (
+            <AdminInventory onUpdate={fetchCounts} />
+          )}
 
-          {activeTab === "orders" && <AdminOrders />}
+          {activeTab === "orders" && <AdminOrders onUpdate={fetchCounts} />}
 
-          {activeTab === "consultations" && <AdminConsultations />}
+          {activeTab === "consultations" && (
+            <AdminConsultations onUpdate={fetchCounts} />
+          )}
 
           {activeTab === "settings" && (
             <div className="space-y-12 animate-in slide-in-from-bottom-4 duration-700">
