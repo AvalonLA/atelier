@@ -100,42 +100,45 @@ export const AdminInventory: React.FC = () => {
 
   const handleBulkEdit = async () => {
     if (selectedProducts.length === 0) return;
-    
+
     // Process Local State
-    const updatedProducts = products.map(p => {
-        if(!selectedProducts.includes(p.id)) return p;
-        
-        let newPrice = p.price || 0;
-        const change = bulkAction.mode === "fixed" 
-            ? bulkAction.value 
-            : (newPrice * (bulkAction.value / 100));
-            
-        if(bulkAction.type === "increase") {
-            newPrice += change;
-        } else {
-            newPrice -= change;
-        }
-        
-        return { ...p, price: Math.max(0, Number(newPrice.toFixed(2))) };
+    const updatedProducts = products.map((p) => {
+      if (!selectedProducts.includes(p.id)) return p;
+
+      let newPrice = p.price || 0;
+      const change =
+        bulkAction.mode === "fixed"
+          ? bulkAction.value
+          : newPrice * (bulkAction.value / 100);
+
+      if (bulkAction.type === "increase") {
+        newPrice += change;
+      } else {
+        newPrice -= change;
+      }
+
+      return { ...p, price: Math.max(0, Number(newPrice.toFixed(2))) };
     });
-    
+
     // Optimistic Update
     setProducts(updatedProducts);
-    
+
     try {
-        // Process Backend Updates
-        await Promise.all(
-            updatedProducts
-                .filter(p => selectedProducts.includes(p.id))
-                .map(p => InventoryService.updateProduct(p.id, { price: p.price }))
-        );
-        toast.success(`PRECIOS ACTUALIZADOS EN ${selectedProducts.length} PRODUCTOS`);
-        setIsBulkEditOpen(false);
-        setSelectedProducts([]);
-    } catch(e) {
-        console.error(e);
-        toast.error("ERROR AL ACTUALIZAR PRECIOS");
-        loadProducts(); // Revert on error
+      // Process Backend Updates
+      await Promise.all(
+        updatedProducts
+          .filter((p) => selectedProducts.includes(p.id))
+          .map((p) => InventoryService.updateProduct(p.id, { price: p.price })),
+      );
+      toast.success(
+        `PRECIOS ACTUALIZADOS EN ${selectedProducts.length} PRODUCTOS`,
+      );
+      setIsBulkEditOpen(false);
+      setSelectedProducts([]);
+    } catch (e) {
+      console.error(e);
+      toast.error("ERROR AL ACTUALIZAR PRECIOS");
+      loadProducts(); // Revert on error
     }
   };
 
@@ -227,76 +230,97 @@ export const AdminInventory: React.FC = () => {
   return (
     <>
       <div className="space-y-8 animate-in fade-in duration-500">
-        
         {/* Bulk Edit Modal */}
         {isBulkEditOpen && (
-             <div className="fixed inset-0 z-[60000] flex items-center justify-center p-4">
-                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsBulkEditOpen(false)}/>
-                <div className="bg-white dark:bg-[#111] p-8 w-full max-w-md relative z-10 rounded-xl border border-neutral-200 dark:border-white/10 shadow-2xl space-y-6">
-                    <div>
-                        <h3 className="font-futuristic text-lg tracking-widest uppercase mb-1 dark:text-white">MODIFICACIÓN MASIVA</h3>
-                        <p className="text-xs text-neutral-500">Aplicando cambios a {selectedProducts.length} productos</p>
-                    </div>
+          <div className="fixed inset-0 z-[60000] flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              onClick={() => setIsBulkEditOpen(false)}
+            />
+            <div className="bg-white dark:bg-[#111] p-8 w-full max-w-md relative z-10 rounded-xl border border-neutral-200 dark:border-white/10 shadow-2xl space-y-6">
+              <div>
+                <h3 className="font-futuristic text-lg tracking-widest uppercase mb-1 dark:text-white">
+                  MODIFICACIÓN MASIVA
+                </h3>
+                <p className="text-xs text-neutral-500">
+                  Aplicando cambios a {selectedProducts.length} productos
+                </p>
+              </div>
 
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-2">
-                             <button
-                                onClick={() => setBulkAction(prev => ({ ...prev, type: 'increase' }))}
-                                className={`p-3 text-[10px] font-futuristic tracking-widest border transition-all ${bulkAction.type === 'increase' ? 'bg-black text-white dark:bg-white dark:text-black border-transparent' : 'border-neutral-200 dark:border-white/20 text-neutral-500'}`}
-                             >
-                                AUMENTAR (+)
-                             </button>
-                             <button
-                                onClick={() => setBulkAction(prev => ({ ...prev, type: 'decrease' }))}
-                                className={`p-3 text-[10px] font-futuristic tracking-widest border transition-all ${bulkAction.type === 'decrease' ? 'bg-black text-white dark:bg-white dark:text-black border-transparent' : 'border-neutral-200 dark:border-white/20 text-neutral-500'}`}
-                             >
-                                DISMINUIR (-)
-                             </button>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2">
-                             <button
-                                onClick={() => setBulkAction(prev => ({ ...prev, mode: 'fixed' }))}
-                                className={`p-3 text-[10px] font-futuristic tracking-widest border transition-all ${bulkAction.mode === 'fixed' ? 'bg-neutral-100 dark:bg-neutral-800 border-neutral-300 dark:border-white/30' : 'border-neutral-200 dark:border-white/10 text-neutral-500'}`}
-                             >
-                                VALOR FIJO ($)
-                             </button>
-                             <button
-                                onClick={() => setBulkAction(prev => ({ ...prev, mode: 'percentage' }))}
-                                className={`p-3 text-[10px] font-futuristic tracking-widest border transition-all ${bulkAction.mode === 'percentage' ? 'bg-neutral-100 dark:bg-neutral-800 border-neutral-300 dark:border-white/30' : 'border-neutral-200 dark:border-white/10 text-neutral-500'}`}
-                             >
-                                PORCENTAJE (%)
-                             </button>
-                        </div>
-                        
-                        <div className="pt-2">
-                            <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50 block mb-2">Valor a aplicar</label>
-                            <input 
-                                type="number"
-                                value={bulkAction.value}
-                                onChange={(e) => setBulkAction(prev => ({ ...prev, value: parseFloat(e.target.value) || 0 }))}
-                                placeholder="0.00"
-                                className="w-full bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-white/10 p-4 text-xl font-light outline-none focus:border-black dark:focus:border-white transition-colors"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="pt-6 flex gap-3">
-                         <button 
-                            onClick={handleBulkEdit}
-                            className="flex-1 bg-black text-white dark:bg-white dark:text-black py-4 text-[10px] font-futuristic tracking-widest hover:opacity-90 transition-opacity"
-                         >
-                            CONFIRMAR CAMBIOS
-                         </button>
-                         <button 
-                            onClick={() => setIsBulkEditOpen(false)}
-                            className="px-6 border border-neutral-200 dark:border-white/10 text-neutral-500 hover:text-black dark:hover:text-white transition-colors text-[10px] font-futuristic tracking-widest"
-                         >
-                            CANCELAR
-                         </button>
-                    </div>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() =>
+                      setBulkAction((prev) => ({ ...prev, type: "increase" }))
+                    }
+                    className={`p-3 text-[10px] font-futuristic tracking-widest border transition-all ${bulkAction.type === "increase" ? "bg-black text-white dark:bg-white dark:text-black border-transparent" : "border-neutral-200 dark:border-white/20 text-neutral-500"}`}
+                  >
+                    AUMENTAR (+)
+                  </button>
+                  <button
+                    onClick={() =>
+                      setBulkAction((prev) => ({ ...prev, type: "decrease" }))
+                    }
+                    className={`p-3 text-[10px] font-futuristic tracking-widest border transition-all ${bulkAction.type === "decrease" ? "bg-black text-white dark:bg-white dark:text-black border-transparent" : "border-neutral-200 dark:border-white/20 text-neutral-500"}`}
+                  >
+                    DISMINUIR (-)
+                  </button>
                 </div>
-             </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() =>
+                      setBulkAction((prev) => ({ ...prev, mode: "fixed" }))
+                    }
+                    className={`p-3 text-[10px] font-futuristic tracking-widest border transition-all ${bulkAction.mode === "fixed" ? "bg-neutral-100 dark:bg-neutral-800 border-neutral-300 dark:border-white/30" : "border-neutral-200 dark:border-white/10 text-neutral-500"}`}
+                  >
+                    VALOR FIJO ($)
+                  </button>
+                  <button
+                    onClick={() =>
+                      setBulkAction((prev) => ({ ...prev, mode: "percentage" }))
+                    }
+                    className={`p-3 text-[10px] font-futuristic tracking-widest border transition-all ${bulkAction.mode === "percentage" ? "bg-neutral-100 dark:bg-neutral-800 border-neutral-300 dark:border-white/30" : "border-neutral-200 dark:border-white/10 text-neutral-500"}`}
+                  >
+                    PORCENTAJE (%)
+                  </button>
+                </div>
+
+                <div className="pt-2">
+                  <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50 block mb-2">
+                    Valor a aplicar
+                  </label>
+                  <input
+                    type="number"
+                    value={bulkAction.value}
+                    onChange={(e) =>
+                      setBulkAction((prev) => ({
+                        ...prev,
+                        value: parseFloat(e.target.value) || 0,
+                      }))
+                    }
+                    placeholder="0.00"
+                    className="w-full bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-white/10 p-4 text-xl font-light outline-none focus:border-black dark:focus:border-white transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-6 flex gap-3">
+                <button
+                  onClick={handleBulkEdit}
+                  className="flex-1 bg-black text-white dark:bg-white dark:text-black py-4 text-[10px] font-futuristic tracking-widest hover:opacity-90 transition-opacity"
+                >
+                  CONFIRMAR CAMBIOS
+                </button>
+                <button
+                  onClick={() => setIsBulkEditOpen(false)}
+                  className="px-6 border border-neutral-200 dark:border-white/10 text-neutral-500 hover:text-black dark:hover:text-white transition-colors text-[10px] font-futuristic tracking-widest"
+                >
+                  CANCELAR
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -308,19 +332,19 @@ export const AdminInventory: React.FC = () => {
               Gestión de Catálogo
             </p>
           </div>
-          
+
           {selectedProducts.length > 0 && (
             <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-lg animate-in fade-in slide-in-from-top-2 border border-blue-200 dark:border-blue-800">
-                <span className="text-[10px] font-futuristic tracking-wide text-blue-600 dark:text-blue-400">
-                    {selectedProducts.length} SELECCIONADOS
-                </span>
-                <div className="h-4 w-px bg-blue-200 dark:bg-blue-700 mx-2"/>
-                <button 
-                  onClick={() => setIsBulkEditOpen(true)}
-                  className="text-[10px] font-futuristic hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
-                >
-                    MODIFICAR PRECIOS
-                </button>
+              <span className="text-[10px] font-futuristic tracking-wide text-blue-600 dark:text-blue-400">
+                {selectedProducts.length} SELECCIONADOS
+              </span>
+              <div className="h-4 w-px bg-blue-200 dark:bg-blue-700 mx-2" />
+              <button
+                onClick={() => setIsBulkEditOpen(true)}
+                className="text-[10px] font-futuristic hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+              >
+                MODIFICAR PRECIOS
+              </button>
             </div>
           )}
 
@@ -394,17 +418,22 @@ export const AdminInventory: React.FC = () => {
               <thead className="bg-neutral-50 dark:bg-neutral-900 text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase border-b border-neutral-200 dark:border-neutral-800">
                 <tr>
                   <th className="px-6 py-4">
-                    <input 
-                        type="checkbox" 
-                        className="w-4 h-4 rounded border-neutral-300"
-                        onChange={(e) => {
-                            if(e.target.checked) {
-                                setSelectedProducts(paginatedProducts.map(p => p.id));
-                            } else {
-                                setSelectedProducts([]);
-                            }
-                        }}
-                        checked={selectedProducts.length > 0 && selectedProducts.length >= paginatedProducts.length}
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded border-neutral-300"
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedProducts(
+                            paginatedProducts.map((p) => p.id),
+                          );
+                        } else {
+                          setSelectedProducts([]);
+                        }
+                      }}
+                      checked={
+                        selectedProducts.length > 0 &&
+                        selectedProducts.length >= paginatedProducts.length
+                      }
                     />
                   </th>
                   <th className="px-6 py-4">Imagen</th>
@@ -450,17 +479,17 @@ export const AdminInventory: React.FC = () => {
                       className={`group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors ${selectedProducts.includes(product.id) ? "bg-blue-50/50 dark:bg-blue-900/10" : ""}`}
                     >
                       <td className="px-6 py-4">
-                        <input 
-                            type="checkbox" 
-                            className="w-4 h-4 rounded border-neutral-300"
-                            checked={selectedProducts.includes(product.id)}
-                            onChange={() => {
-                                setSelectedProducts(prev => 
-                                    prev.includes(product.id) 
-                                        ? prev.filter(id => id !== product.id)
-                                        : [...prev, product.id]
-                                );
-                            }}
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-neutral-300"
+                          checked={selectedProducts.includes(product.id)}
+                          onChange={() => {
+                            setSelectedProducts((prev) =>
+                              prev.includes(product.id)
+                                ? prev.filter((id) => id !== product.id)
+                                : [...prev, product.id],
+                            );
+                          }}
                         />
                       </td>
                       <td className="px-6 py-4">

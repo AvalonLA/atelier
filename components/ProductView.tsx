@@ -382,7 +382,8 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
                         ${product.sale_price.toLocaleString()}
                       </span>
                       <span className="text-xl line-through text-neutral-400">
-                        ${product.price ? product.price.toLocaleString() : "999"}
+                        $
+                        {product.price ? product.price.toLocaleString() : "999"}
                       </span>
                       <span className="px-2 py-1 bg-red-100 text-red-600 text-[9px] font-futuristic tracking-widest rounded">
                         -

@@ -121,7 +121,10 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
     Record<string, string[]>
   >({});
   const [sortOption, setSortOption] = useState<string>("default");
-  const [priceRange, setPriceRange] = useState<{ min: number; max: number | null }>({
+  const [priceRange, setPriceRange] = useState<{
+    min: number;
+    max: number | null;
+  }>({
     min: 0,
     max: null,
   });
@@ -336,7 +339,14 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
     }
 
     return result;
-  }, [filter, allProducts, searchQuery, advancedFilters, sortOption, priceRange]);
+  }, [
+    filter,
+    allProducts,
+    searchQuery,
+    advancedFilters,
+    sortOption,
+    priceRange,
+  ]);
 
   const displayedProducts = useMemo(() => {
     if (showAll) return filteredProducts;
@@ -745,8 +755,14 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
                                   { id: "oldest", label: "MÁS ANTIGUOS" },
                                   { id: "az", label: "A - Z" },
                                   { id: "za", label: "Z - A" },
-                                  { id: "price-asc", label: "PRECIO: BAJO-ALTO" },
-                                  { id: "price-desc", label: "PRECIO: ALTO-BAJO" },
+                                  {
+                                    id: "price-asc",
+                                    label: "PRECIO: BAJO-ALTO",
+                                  },
+                                  {
+                                    id: "price-desc",
+                                    label: "PRECIO: ALTO-BAJO",
+                                  },
                                 ].map((opt) => (
                                   <button
                                     key={opt.id}
@@ -789,7 +805,11 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
                                   <input
                                     type="number"
                                     min="0"
-                                    value={priceRange.max === null ? "" : priceRange.max}
+                                    value={
+                                      priceRange.max === null
+                                        ? ""
+                                        : priceRange.max
+                                    }
                                     placeholder="ILIMITADO"
                                     onChange={(e) =>
                                       setPriceRange((prev) => ({
