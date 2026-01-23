@@ -24,6 +24,7 @@ import Footer from "./components/Footer";
 import ProductView from "./components/ProductView";
 import VisionSection from "./components/VisionSection";
 import { Product } from "./types";
+import { Toaster } from "sonner";
 
 const AppContent: React.FC = () => {
   useEffect(() => {
@@ -198,6 +199,18 @@ const AppContent: React.FC = () => {
       )}
 
       {isAdminOpen && <AdminPanel onClose={() => setIsAdminOpen(false)} />}
+      <Toaster position="bottom-center" toastOptions={{
+        style: {
+          background: 'rgba(0,0,0,0.8)',
+          color: 'white',
+          border: '1px solid rgba(255,255,255,0.1)',
+          backdropFilter: 'blur(10px)',
+          fontFamily: 'monospace',
+          fontSize: '12px',
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em'
+        }
+      }} />
 
       <style>{`
         @keyframes marquee {

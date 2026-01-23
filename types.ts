@@ -5,6 +5,7 @@ export interface Product {
   description: string;
   longDescription: string;
   price?: number;
+  featured?: boolean;
   image: string;
   gallery: string[];
   tag: string;

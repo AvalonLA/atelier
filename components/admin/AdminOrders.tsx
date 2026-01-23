@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { OrderService, InventoryService } from "../../services/supabase";
 import { Order, Product } from "../../types";
 import { TableRowSkeleton } from "../ui/AdminSkeletons";
+import { toast } from "sonner";
 
 export const AdminOrders: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -54,9 +55,10 @@ export const AdminOrders: React.FC = () => {
           setOrders(prev => prev.filter(o => o.id !== orderToDelete));
           setIsDeleteModalOpen(false);
           setOrderToDelete(null);
+          toast.success("ORDEN ELIMINADA");
       } catch (e) {
           console.error(e);
-          alert("Error al eliminar");
+          toast.error("ERROR AL ELIMINAR");
       }
   };
 
@@ -95,9 +97,10 @@ export const AdminOrders: React.FC = () => {
         }
         setIsFormOpen(false);
         setEditingOrder(null);
+        toast.success("ORDEN GUARDADA");
     } catch (e) {
         console.error(e);
-        alert("Error al guardar");
+        toast.error("ERROR AL GUARDAR");
     }
   };
 
@@ -181,7 +184,7 @@ export const AdminOrders: React.FC = () => {
                                 {order.items?.length || 0} items
                             </td>
                             <td className="px-6 py-4 text-right">
-                                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="flex justify-end gap-2 transition-opacity">
                                     <button 
                                         onClick={() => handleEdit(order)}
                                         className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded text-neutral-500 hover:text-black dark:hover:text-white transition-colors"

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { useConfig } from "../../context/ConfigContext";
 import { InventoryService } from "../../services/supabase";
 import { Product } from "../../types";
@@ -77,9 +78,10 @@ export const AdminInventory: React.FC = () => {
       await InventoryService.deleteProduct(id);
       setProducts((prev) => prev.filter((p) => p.id !== id));
       setProductToDelete(null);
+      toast.success("PRODUCTO ELIMINADO");
     } catch (error) {
       console.error("Error deleting product:", error);
-      alert("Error al eliminar el producto");
+      toast.error("ERROR AL ELIMINAR EL PRODUCTO");
     }
   };
 
@@ -110,9 +112,10 @@ export const AdminInventory: React.FC = () => {
       }
       setIsModalOpen(false);
       setEditingProduct(null);
+      toast.success("INVENTARIO ACTUALIZADO");
     } catch (error) {
       console.error("Failed to save product:", error);
-      alert("Error al guardar el producto");
+      toast.error("ERROR AL GUARDAR EL PRODUCTO");
     }
   };
 
@@ -321,7 +324,7 @@ export const AdminInventory: React.FC = () => {
                     alt={product.name}
                     className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   />
-                  <div className="absolute top-2 right-2 flex gap-1 bg-white/90 dark:bg-black/90 p-1 rounded backdrop-blur-sm opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-2 right-2 flex gap-1 bg-white/90 dark:bg-black/90 p-1 rounded backdrop-blur-sm transition-opacity">
                     <button
                       onClick={() => {
                         setEditingProduct(product);
@@ -434,6 +437,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           gallery: [],
           tag: "",
           specs: [],
+          featured: false,
         },
   );
 
@@ -441,6 +445,25 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const [draggedImageIndex, setDraggedImageIndex] = useState<number | null>(
     null,
   );
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleValidateAndSave = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.name.trim()) newErrors.name = "EL NOMBRE ES REQUERIDO";
+    if (!formData.description.trim()) newErrors.description = "DESCRIPCIÓN REQUERIDA";
+    if (!formData.category) newErrors.category = "CATEGORÍA REQUERIDA";
+    
+    // Optional: Price validation if needed, but it's typed as number | undefined
+    
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length === 0) {
+      onSave(formData);
+    } else {
+      toast.error("POR FAVOR REVISE EL FORMULARIO");
+    }
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -560,8 +583,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="w-full bg-neutral-100 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 rounded focus:border-black dark:focus:border-white outline-none transition-colors"
+                className={`w-full bg-neutral-100 dark:bg-black border ${errors.name ? "border-red-500" : "border-neutral-200 dark:border-white/10"} p-3 rounded focus:border-black dark:focus:border-white outline-none transition-colors`}
               />
+              {errors.name && (
+                <span className="text-[9px] text-red-500 font-futuristic tracking-widest">{errors.name}</span>
+              )}
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
@@ -582,6 +608,23 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 <option value="table">Table (Mesa)</option>
                 <option value="tech">Tech (Smart)</option>
               </select>
+            </div>
+            <div className="flex items-center gap-3 pt-6">
+              <input
+                type="checkbox"
+                id="featured"
+                checked={formData.featured || false}
+                onChange={(e) =>
+                  setFormData({ ...formData, featured: e.target.checked })
+                }
+                className="w-4 h-4 bg-transparent border border-neutral-500 rounded focus:ring-0 checked:bg-white"
+              />
+              <label
+                htmlFor="featured"
+                className="text-[10px] font-futuristic tracking-widest uppercase cursor-pointer select-none"
+              >
+                Destacar en Home Page
+              </label>
             </div>
             <div className="col-span-2 space-y-2">
               <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
@@ -611,8 +654,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                className="w-full bg-neutral-100 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 rounded focus:border-black dark:focus:border-white outline-none transition-colors"
+                className={`w-full bg-neutral-100 dark:bg-black border ${errors.description ? "border-red-500" : "border-neutral-200 dark:border-white/10"} p-3 rounded focus:border-black dark:focus:border-white outline-none transition-colors`}
               />
+              {errors.description && (
+                <span className="text-[9px] text-red-500 font-futuristic tracking-widest">{errors.description}</span>
+              )}
             </div>
             <div className="col-span-2 space-y-2">
               <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
@@ -807,7 +853,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => onSave(formData)}
+              onClick={handleValidateAndSave}
               className="flex-1 py-3 text-[10px] font-futuristic tracking-widest bg-black dark:bg-white text-white dark:text-black hover:opacity-80 transition-opacity"
             >
               GUARDAR CAMBIOS

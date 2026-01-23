@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useConfig } from "../context/ConfigContext";
 import { supabase } from "../services/supabase";
 import { AdminConsultations } from "./admin/AdminConsultations";
@@ -72,13 +73,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       });
 
       if (error) {
-        alert("Invalid credentials");
+        toast.error("CREDENCIALES INVÁLIDAS");
       } else if (data.session) {
         setIsAuthenticated(true);
       }
     } catch (e) {
       console.error(e);
-      alert("Login failed");
+      toast.error("ERROR AL INICIAR SESIÓN");
     } finally {
       setIsLoading(false);
     }

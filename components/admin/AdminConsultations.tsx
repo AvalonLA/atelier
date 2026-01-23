@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { ConsultationService } from "../../services/supabase";
 import { Consultation } from "../../types";
 import { TableRowSkeleton } from "../ui/AdminSkeletons";
@@ -92,9 +93,10 @@ export const AdminConsultations: React.FC = () => {
         }
         setIsFormOpen(false);
         setEditingItem(null);
+        toast.success("CONSULTA GUARDADA");
     } catch (e) {
         console.error(e);
-        alert("Error al guardar");
+        toast.error("ERROR AL GUARDAR");
     }
   };
 
@@ -171,7 +173,7 @@ export const AdminConsultations: React.FC = () => {
                             </span>
                         </td>
                          <td className="px-6 py-4 text-right">
-                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex justify-end gap-2 transition-opacity">
                                 <button
                                     onClick={() => handleEdit(c)}
                                     className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded text-neutral-500 hover:text-black dark:hover:text-white transition-colors"

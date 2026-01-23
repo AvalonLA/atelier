@@ -3,6 +3,8 @@ import { useConfig } from "../context/ConfigContext";
 import { InventoryService, supabase } from "../services/supabase";
 import { optimizeImage } from "../utils/imageOptimizer";
 import RichTextEditor from "./ui/RichTextEditor";
+import { toast } from "sonner";
+
 
 const VisionSection: React.FC = () => {
   const { config, updateLocalConfig } = useConfig();
@@ -88,9 +90,10 @@ const VisionSection: React.FC = () => {
       const file = await optimizeImage(e.target.files[0]);
       const url = await InventoryService.uploadImage(file);
       setEditValues((prev) => ({ ...prev, imageUrl: url }));
+      toast.success("IMAGEN ACTUALIZADA");
     } catch (error) {
       console.error("Error uploading image:", error);
-      alert("Error uploading image");
+      toast.error("ERROR AL CARGAR IMAGEN");
     } finally {
       setIsUploading(false);
     }

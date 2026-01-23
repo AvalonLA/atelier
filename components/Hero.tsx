@@ -3,6 +3,8 @@ import { useConfig } from "../context/ConfigContext";
 import { InventoryService, supabase } from "../services/supabase";
 import { optimizeImage } from "../utils/imageOptimizer";
 import RichTextEditor from "./ui/RichTextEditor";
+import { toast } from "sonner";
+
 
 const Hero: React.FC = () => {
   const { config, updateLocalConfig } = useConfig();
@@ -90,9 +92,10 @@ const Hero: React.FC = () => {
 
       const publicUrl = await InventoryService.uploadImage(optimizedFile);
       setEditValues((prev) => ({ ...prev, imageUrl: publicUrl }));
+      toast.success("IMAGEN ACTUALIZADA");
     } catch (error) {
       console.error("Error uploading image:", error);
-      alert("Error uploading image. Make sure you are logged in.");
+      toast.error("ERROR AL CARGAR IMAGEN. REVISE SESIÓN.");
     } finally {
       setIsUploading(false);
     }

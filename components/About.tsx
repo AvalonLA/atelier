@@ -3,6 +3,8 @@ import { useConfig } from "../context/ConfigContext";
 import { InventoryService, supabase } from "../services/supabase";
 import { optimizeImage } from "../utils/imageOptimizer";
 import RichTextEditor from "./ui/RichTextEditor";
+import { toast } from "sonner";
+
 
 const About: React.FC = () => {
   const { config, updateLocalConfig } = useConfig();
@@ -64,9 +66,10 @@ const About: React.FC = () => {
       const newItems = [...editValues.items];
       newItems[index] = { ...newItems[index], image: url };
       setEditValues((prev) => ({ ...prev, items: newItems }));
+      toast.success("IMAGEN ACTUALIZADA");
     } catch (error) {
       console.error(error);
-      alert("Error uploading image");
+      toast.error("ERROR AL CARGAR IMAGEN");
     } finally {
       setUploadingIndex(null);
     }

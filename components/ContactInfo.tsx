@@ -248,6 +248,44 @@ const ContactInfo: React.FC = () => {
                 </div>
               </div>
 
+              {/* EMAIL SECTION ADDED */}
+              <div className="flex items-start gap-6">
+                <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center flex-shrink-0">
+                  <svg
+                    className="w-4 h-4 text-neutral-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-futuristic text-[9px] tracking-widest text-neutral-500 mb-2 uppercase">
+                    EMAIL
+                  </h4>
+                  {isEditing ? (
+                    <input
+                      value={editValues.email}
+                      onChange={(e) =>
+                        setEditValues({
+                          ...editValues,
+                          email: e.target.value,
+                        })
+                      }
+                      className="text-xl font-light bg-transparent border-b border-white/20 outline-none w-full focus:border-white"
+                    />
+                  ) : (
+                    <a
+                      href={`mailto:${config.contact_email}`}
+                      className="text-xl font-light hover:text-white transition-colors"
+                    >
+                      {config.contact_email}
+                    </a>
+                  )}
+                </div>
+              </div>
+
               <div className="flex items-start gap-6">
                 <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center flex-shrink-0">
                   <svg

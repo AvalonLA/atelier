@@ -9,6 +9,8 @@ create table if not exists public.products (
   category text not null,
   description text,
   "longDescription" text,
+  price numeric,
+  featured boolean default false,
   image text,
   gallery jsonb default '[]'::jsonb,
   tag text,

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useCart } from "../context/CartContext";
 import { useConfig } from "../context/ConfigContext";
 import { GeminiService } from "../services/geminiService";
@@ -139,12 +140,13 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
           fullPrompt,
         );
         setResultImage(result);
+        toast.success("VISUALIZACIÓN COMPLETADA");
       } else {
-        alert("Error loading product image data.");
+        toast.error("ERROR AL CARGAR IMAGEN DEL PRODUCTO");
       }
     } catch (error) {
       console.error(error);
-      alert("Error al procesar la imagen. Intenta de nuevo.");
+      toast.error("ERROR AL PROCESAR IMAGEN");
     } finally {
       setIsGenerating(false);
     }
