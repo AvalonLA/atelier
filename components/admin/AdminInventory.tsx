@@ -538,6 +538,23 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </div>
             <div className="col-span-2 space-y-2">
               <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
+                Precio (Opcional)
+              </label>
+              <input
+                type="number"
+                value={formData.price || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    price: e.target.value ? parseFloat(e.target.value) : undefined,
+                  })
+                }
+                placeholder="0.00"
+                className="w-full bg-neutral-100 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 rounded focus:border-black dark:focus:border-white outline-none transition-colors"
+              />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
                 Descripción Corta
               </label>
               <input

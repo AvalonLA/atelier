@@ -307,7 +307,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
               </svg>
             )}
             {!isSidebarCollapsed && (
-              <span>{theme === "dark" ? "LIGHT_MODE" : "DARK_MODE"}</span>
+              <span>{config.theme === "dark" ? "LIGHT_MODE" : "DARK_MODE"}</span>
             )}
           </button>
 

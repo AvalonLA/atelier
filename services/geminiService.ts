@@ -30,7 +30,7 @@ export class GeminiService {
     try {
       const ai = this.getAI();
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.0-flash-exp",
         contents: [...history, { role: "user", parts: [{ text: prompt }] }],
         config: {
           systemInstruction: `Eres 'ATELIER AI', un consultor de iluminación arquitectónica para ATELIER.
