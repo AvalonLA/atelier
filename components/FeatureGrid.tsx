@@ -70,10 +70,26 @@ const ExpandingGridRow: React.FC<{
                 <p className="font-futuristic text-xl lg:text-2xl font-light italic">
                   {p.description}
                 </p>
-                {p.price && (
-                  <p className="font-futuristic text-lg lg:text-xl font-bold">
-                    ${p.price.toLocaleString()}
-                  </p>
+                {p.sale_price ? (
+                  <div className="flex items-center gap-3">
+                    <p className="font-futuristic text-lg lg:text-xl font-bold text-red-500">
+                      ${p.sale_price.toLocaleString()}
+                    </p>
+                    {p.price && (
+                      <p className="font-futuristic text-sm line-through text-white/50">
+                        ${p.price.toLocaleString()}
+                      </p>
+                    )}
+                    <span className="text-[9px] bg-red-600 text-white px-1.5 rounded">
+                      SALE
+                    </span>
+                  </div>
+                ) : (
+                  p.price && (
+                    <p className="font-futuristic text-lg lg:text-xl font-bold">
+                      ${p.price.toLocaleString()}
+                    </p>
+                  )
                 )}
               </div>
             </div>
@@ -104,6 +120,11 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
   const [advancedFilters, setAdvancedFilters] = useState<
     Record<string, string[]>
   >({});
+  const [sortOption, setSortOption] = useState<string>("default");
+  const [priceRange, setPriceRange] = useState<{ min: number; max: number | null }>({
+    min: 0,
+    max: null,
+  });
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -144,6 +165,8 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
     setFilter("all");
     setSearchQuery("");
     setAdvancedFilters({});
+    setSortOption("default");
+    setPriceRange({ min: 0, max: null });
   };
 
   const [isUploading, setIsUploading] = useState(false);
@@ -246,9 +269,19 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
   }, [filter, showAll]);
 
   const filteredProducts = useMemo(() => {
-    let result = allProducts;
+    let result = [...allProducts];
     if (filter !== "all") {
       result = result.filter((p) => p.category === filter);
+    }
+
+    // Apply Price Filter
+    if (priceRange.max !== null) {
+      result = result.filter(
+        (p) =>
+          (p.price || 0) >= priceRange.min && (p.price || 0) <= priceRange.max!,
+      );
+    } else if (priceRange.min > 0) {
+      result = result.filter((p) => (p.price || 0) >= priceRange.min);
     }
 
     // Apply Advanced Filters
@@ -275,8 +308,35 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
           p.longDescription.toLowerCase().includes(q),
       );
     }
+
+    // Apply Sorting
+    switch (sortOption) {
+      case "az":
+        result.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "za":
+        result.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      case "price-asc":
+        result.sort((a, b) => (a.price || 0) - (b.price || 0));
+        break;
+      case "price-desc":
+        result.sort((a, b) => (b.price || 0) - (a.price || 0));
+        break;
+      case "oldest":
+        result.sort((a, b) =>
+          (a.created_at || "").localeCompare(b.created_at || ""),
+        );
+        break;
+      case "newest":
+        result.sort((a, b) =>
+          (b.created_at || "").localeCompare(a.created_at || ""),
+        );
+        break;
+    }
+
     return result;
-  }, [filter, allProducts, searchQuery, advancedFilters]);
+  }, [filter, allProducts, searchQuery, advancedFilters, sortOption, priceRange]);
 
   const displayedProducts = useMemo(() => {
     if (showAll) return filteredProducts;
@@ -623,7 +683,7 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
                         className={`grid transition-[grid-template-rows] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${showAdvancedFilters ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-50"}`}
                       >
                         <div className="overflow-hidden">
-                          <div className="mt-6 p-6 border border-white/10 bg-white/5 grid grid-cols-2 md:grid-cols-4 gap-8">
+                          <div className="mt-6 p-6 border border-white/10 bg-white/5 grid grid-cols-2 lg:grid-cols-5 gap-8">
                             {[
                               {
                                 label: "Material",
@@ -672,6 +732,78 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
                                 </div>
                               </div>
                             ))}
+
+                            {/* Sorting Column */}
+                            <div className="space-y-4">
+                              <h4 className="font-futuristic text-[9px] tracking-[0.2em] text-white/40 uppercase">
+                                ORDENAR
+                              </h4>
+                              <div className="space-y-2 flex flex-col items-start">
+                                {[
+                                  { id: "default", label: "RECOMENDADO" },
+                                  { id: "newest", label: "MÁS RECIENTES" },
+                                  { id: "oldest", label: "MÁS ANTIGUOS" },
+                                  { id: "az", label: "A - Z" },
+                                  { id: "za", label: "Z - A" },
+                                  { id: "price-asc", label: "PRECIO: BAJO-ALTO" },
+                                  { id: "price-desc", label: "PRECIO: ALTO-BAJO" },
+                                ].map((opt) => (
+                                  <button
+                                    key={opt.id}
+                                    onClick={() => setSortOption(opt.id)}
+                                    className={`text-left font-futuristic text-[9px] tracking-widest transition-colors ${sortOption === opt.id ? "text-white underline decoration-white/30 underline-offset-4" : "text-neutral-500 hover:text-white"}`}
+                                  >
+                                    {opt.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Price Range Column */}
+                            <div className="space-y-4">
+                              <h4 className="font-futuristic text-[9px] tracking-[0.2em] text-white/40 uppercase">
+                                RANGO ($)
+                              </h4>
+                              <div className="space-y-4">
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[9px] text-neutral-500 font-futuristic">
+                                    MIN
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={priceRange.min}
+                                    onChange={(e) =>
+                                      setPriceRange((prev) => ({
+                                        ...prev,
+                                        min: Number(e.target.value),
+                                      }))
+                                    }
+                                    className="bg-black/20 border border-white/10 text-white text-[10px] p-2 focus:border-white transition-colors outline-none font-mono w-full"
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <label className="text-[9px] text-neutral-500 font-futuristic">
+                                    MAX
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={priceRange.max === null ? "" : priceRange.max}
+                                    placeholder="ILIMITADO"
+                                    onChange={(e) =>
+                                      setPriceRange((prev) => ({
+                                        ...prev,
+                                        max: e.target.value
+                                          ? Number(e.target.value)
+                                          : null,
+                                      }))
+                                    }
+                                    className="bg-black/20 border border-white/10 text-white text-[10px] p-2 focus:border-white transition-colors outline-none font-mono w-full"
+                                  />
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>

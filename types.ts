@@ -5,6 +5,7 @@ export interface Product {
   description: string;
   longDescription: string;
   price?: number;
+  sale_price?: number;
   stock?: number;
   featured?: boolean;
   visible?: boolean;
@@ -12,6 +13,7 @@ export interface Product {
   gallery: string[];
   tag: string;
   specs: { label: string; value: string }[];
+  created_at?: string;
 }
 
 export interface ChatMessage {

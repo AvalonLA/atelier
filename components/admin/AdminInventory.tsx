@@ -86,6 +86,59 @@ export const AdminInventory: React.FC = () => {
     }
   };
 
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
+  const [bulkAction, setBulkAction] = useState<{
+    type: "increase" | "decrease";
+    mode: "fixed" | "percentage";
+    value: number;
+  }>({
+    type: "increase",
+    mode: "fixed",
+    value: 0,
+  });
+
+  const handleBulkEdit = async () => {
+    if (selectedProducts.length === 0) return;
+    
+    // Process Local State
+    const updatedProducts = products.map(p => {
+        if(!selectedProducts.includes(p.id)) return p;
+        
+        let newPrice = p.price || 0;
+        const change = bulkAction.mode === "fixed" 
+            ? bulkAction.value 
+            : (newPrice * (bulkAction.value / 100));
+            
+        if(bulkAction.type === "increase") {
+            newPrice += change;
+        } else {
+            newPrice -= change;
+        }
+        
+        return { ...p, price: Math.max(0, Number(newPrice.toFixed(2))) };
+    });
+    
+    // Optimistic Update
+    setProducts(updatedProducts);
+    
+    try {
+        // Process Backend Updates
+        await Promise.all(
+            updatedProducts
+                .filter(p => selectedProducts.includes(p.id))
+                .map(p => InventoryService.updateProduct(p.id, { price: p.price }))
+        );
+        toast.success(`PRECIOS ACTUALIZADOS EN ${selectedProducts.length} PRODUCTOS`);
+        setIsBulkEditOpen(false);
+        setSelectedProducts([]);
+    } catch(e) {
+        console.error(e);
+        toast.error("ERROR AL ACTUALIZAR PRECIOS");
+        loadProducts(); // Revert on error
+    }
+  };
+
   const handleSave = async (product: Product) => {
     try {
       // Cleanup removed images from storage
@@ -120,9 +173,132 @@ export const AdminInventory: React.FC = () => {
     }
   };
 
+  const handleExportCSV = () => {
+    if (products.length === 0) {
+      toast.error("NO HAY DATOS PARA EXPORTAR");
+      return;
+    }
+
+    const headers = [
+      "ID",
+      "NAME",
+      "CATEGORY",
+      "DESCRIPTION",
+      "PRICE",
+      "SALE_PRICE",
+      "STOCK",
+      "TAG",
+      "FEATURED",
+      "VISIBLE",
+      "CREATED_AT",
+    ];
+
+    const csvContent = products.map((p) =>
+      [
+        p.id,
+        `"${p.name.replace(/"/g, '""')}"`,
+        p.category,
+        `"${p.description?.replace(/"/g, '""') || ""}"`,
+        p.price || 0,
+        p.sale_price || "",
+        p.stock || 0,
+        p.tag || "",
+        p.featured ? "YES" : "NO",
+        p.visible !== false ? "YES" : "NO",
+        p.created_at || "",
+      ].join(","),
+    );
+
+    const csvData = [headers.join(","), ...csvContent].join("\n");
+    const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `atelier_inventory_${new Date().toISOString().split("T")[0]}.csv`,
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("EXPORTACIÓN COMPLETADA");
+  };
+
   return (
     <>
       <div className="space-y-8 animate-in fade-in duration-500">
+        
+        {/* Bulk Edit Modal */}
+        {isBulkEditOpen && (
+             <div className="fixed inset-0 z-[60000] flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsBulkEditOpen(false)}/>
+                <div className="bg-white dark:bg-[#111] p-8 w-full max-w-md relative z-10 rounded-xl border border-neutral-200 dark:border-white/10 shadow-2xl space-y-6">
+                    <div>
+                        <h3 className="font-futuristic text-lg tracking-widest uppercase mb-1 dark:text-white">MODIFICACIÓN MASIVA</h3>
+                        <p className="text-xs text-neutral-500">Aplicando cambios a {selectedProducts.length} productos</p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-2">
+                             <button
+                                onClick={() => setBulkAction(prev => ({ ...prev, type: 'increase' }))}
+                                className={`p-3 text-[10px] font-futuristic tracking-widest border transition-all ${bulkAction.type === 'increase' ? 'bg-black text-white dark:bg-white dark:text-black border-transparent' : 'border-neutral-200 dark:border-white/20 text-neutral-500'}`}
+                             >
+                                AUMENTAR (+)
+                             </button>
+                             <button
+                                onClick={() => setBulkAction(prev => ({ ...prev, type: 'decrease' }))}
+                                className={`p-3 text-[10px] font-futuristic tracking-widest border transition-all ${bulkAction.type === 'decrease' ? 'bg-black text-white dark:bg-white dark:text-black border-transparent' : 'border-neutral-200 dark:border-white/20 text-neutral-500'}`}
+                             >
+                                DISMINUIR (-)
+                             </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                             <button
+                                onClick={() => setBulkAction(prev => ({ ...prev, mode: 'fixed' }))}
+                                className={`p-3 text-[10px] font-futuristic tracking-widest border transition-all ${bulkAction.mode === 'fixed' ? 'bg-neutral-100 dark:bg-neutral-800 border-neutral-300 dark:border-white/30' : 'border-neutral-200 dark:border-white/10 text-neutral-500'}`}
+                             >
+                                VALOR FIJO ($)
+                             </button>
+                             <button
+                                onClick={() => setBulkAction(prev => ({ ...prev, mode: 'percentage' }))}
+                                className={`p-3 text-[10px] font-futuristic tracking-widest border transition-all ${bulkAction.mode === 'percentage' ? 'bg-neutral-100 dark:bg-neutral-800 border-neutral-300 dark:border-white/30' : 'border-neutral-200 dark:border-white/10 text-neutral-500'}`}
+                             >
+                                PORCENTAJE (%)
+                             </button>
+                        </div>
+                        
+                        <div className="pt-2">
+                            <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50 block mb-2">Valor a aplicar</label>
+                            <input 
+                                type="number"
+                                value={bulkAction.value}
+                                onChange={(e) => setBulkAction(prev => ({ ...prev, value: parseFloat(e.target.value) || 0 }))}
+                                placeholder="0.00"
+                                className="w-full bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-white/10 p-4 text-xl font-light outline-none focus:border-black dark:focus:border-white transition-colors"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="pt-6 flex gap-3">
+                         <button 
+                            onClick={handleBulkEdit}
+                            className="flex-1 bg-black text-white dark:bg-white dark:text-black py-4 text-[10px] font-futuristic tracking-widest hover:opacity-90 transition-opacity"
+                         >
+                            CONFIRMAR CAMBIOS
+                         </button>
+                         <button 
+                            onClick={() => setIsBulkEditOpen(false)}
+                            className="px-6 border border-neutral-200 dark:border-white/10 text-neutral-500 hover:text-black dark:hover:text-white transition-colors text-[10px] font-futuristic tracking-widest"
+                         >
+                            CANCELAR
+                         </button>
+                    </div>
+                </div>
+             </div>
+        )}
+
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
             <h2 className="text-2xl font-light dark:text-white text-black">
@@ -132,6 +308,22 @@ export const AdminInventory: React.FC = () => {
               Gestión de Catálogo
             </p>
           </div>
+          
+          {selectedProducts.length > 0 && (
+            <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-lg animate-in fade-in slide-in-from-top-2 border border-blue-200 dark:border-blue-800">
+                <span className="text-[10px] font-futuristic tracking-wide text-blue-600 dark:text-blue-400">
+                    {selectedProducts.length} SELECCIONADOS
+                </span>
+                <div className="h-4 w-px bg-blue-200 dark:bg-blue-700 mx-2"/>
+                <button 
+                  onClick={() => setIsBulkEditOpen(true)}
+                  className="text-[10px] font-futuristic hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+                >
+                    MODIFICAR PRECIOS
+                </button>
+            </div>
+          )}
+
           <div className="flex gap-4 w-full md:w-auto">
             <input
               type="text"
@@ -179,6 +371,12 @@ export const AdminInventory: React.FC = () => {
               </button>
             </div>
             <button
+              onClick={handleExportCSV}
+              className="bg-neutral-800 text-white dark:bg-neutral-200 dark:text-black px-4 py-2 text-[10px] font-futuristic tracking-widest hover:opacity-80 transition-opacity whitespace-nowrap"
+            >
+              EXPORTAR
+            </button>
+            <button
               onClick={() => {
                 setEditingProduct(null);
                 setIsModalOpen(true);
@@ -195,6 +393,20 @@ export const AdminInventory: React.FC = () => {
             <table className="w-full text-left">
               <thead className="bg-neutral-50 dark:bg-neutral-900 text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase border-b border-neutral-200 dark:border-neutral-800">
                 <tr>
+                  <th className="px-6 py-4">
+                    <input 
+                        type="checkbox" 
+                        className="w-4 h-4 rounded border-neutral-300"
+                        onChange={(e) => {
+                            if(e.target.checked) {
+                                setSelectedProducts(paginatedProducts.map(p => p.id));
+                            } else {
+                                setSelectedProducts([]);
+                            }
+                        }}
+                        checked={selectedProducts.length > 0 && selectedProducts.length >= paginatedProducts.length}
+                    />
+                  </th>
                   <th className="px-6 py-4">Imagen</th>
                   <th className="px-6 py-4">Producto</th>
                   <th className="px-6 py-4 hidden md:table-cell">Categoría</th>
@@ -208,7 +420,7 @@ export const AdminInventory: React.FC = () => {
                   [...Array(3)].map((_, i) => <TableRowSkeleton key={i} />)
                 ) : paginatedProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-24 text-center">
+                    <td colSpan={7} className="py-24 text-center">
                       <div className="flex flex-col items-center justify-center opacity-30 gap-4">
                         <svg
                           className="w-12 h-12"
@@ -235,8 +447,22 @@ export const AdminInventory: React.FC = () => {
                   paginatedProducts.map((product) => (
                     <tr
                       key={product.id}
-                      className="group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
+                      className={`group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors ${selectedProducts.includes(product.id) ? "bg-blue-50/50 dark:bg-blue-900/10" : ""}`}
                     >
+                      <td className="px-6 py-4">
+                        <input 
+                            type="checkbox" 
+                            className="w-4 h-4 rounded border-neutral-300"
+                            checked={selectedProducts.includes(product.id)}
+                            onChange={() => {
+                                setSelectedProducts(prev => 
+                                    prev.includes(product.id) 
+                                        ? prev.filter(id => id !== product.id)
+                                        : [...prev, product.id]
+                                );
+                            }}
+                        />
+                      </td>
                       <td className="px-6 py-4">
                         <div className="w-12 h-12 bg-neutral-100 dark:bg-neutral-800 rounded overflow-hidden">
                           <img
@@ -643,8 +869,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 md:gap-6 text-sm">
-            <div className="space-y-2">
+          <div className="grid grid-cols-12 gap-4 md:gap-6 text-sm">
+            <div className="col-span-12 md:col-span-8 space-y-2">
               <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
                 Nombre
               </label>
@@ -661,7 +887,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 </span>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="col-span-12 md:col-span-4 space-y-2">
               <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
                 Categoría
               </label>
@@ -681,7 +907,63 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 <option value="tech">Tech (Smart)</option>
               </select>
             </div>
-            <div className="flex flex-col gap-4 justify-center">
+
+            <div className="col-span-6 md:col-span-3 space-y-2">
+              <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
+                Precio (Regular)
+              </label>
+              <input
+                type="number"
+                value={formData.price || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    price: e.target.value
+                      ? parseFloat(e.target.value)
+                      : undefined,
+                  })
+                }
+                placeholder="0.00"
+                className="w-full bg-neutral-100 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 rounded focus:border-black dark:focus:border-white outline-none transition-colors"
+              />
+            </div>
+            <div className="col-span-6 md:col-span-3 space-y-2">
+              <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50 text-blue-400">
+                Precio (Oferta)
+              </label>
+              <input
+                type="number"
+                value={formData.sale_price || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    sale_price: e.target.value
+                      ? parseFloat(e.target.value)
+                      : undefined,
+                  })
+                }
+                placeholder="Opcional"
+                className="w-full bg-neutral-100 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 rounded focus:border-black dark:focus:border-white outline-none transition-colors border-blue-500/20"
+              />
+            </div>
+            <div className="col-span-6 md:col-span-3 space-y-2">
+              <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
+                Stock (Disponible)
+              </label>
+              <input
+                type="number"
+                value={formData.stock || 0}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    stock: parseInt(e.target.value) || 0,
+                  })
+                }
+                className="w-full bg-neutral-100 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 rounded focus:border-black dark:focus:border-white outline-none transition-colors"
+              />
+            </div>
+
+            <div className="col-span-6 md:col-span-3 flex flex-col justify-end pb-3 gap-3">
               <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
@@ -717,44 +999,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 </label>
               </div>
             </div>
-            <div className="col-span-2 grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
-                  Precio
-                </label>
-                <input
-                  type="number"
-                  value={formData.price || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      price: e.target.value
-                        ? parseFloat(e.target.value)
-                        : undefined,
-                    })
-                  }
-                  placeholder="0.00"
-                  className="w-full bg-neutral-100 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 rounded focus:border-black dark:focus:border-white outline-none transition-colors"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
-                  Stock
-                </label>
-                <input
-                  type="number"
-                  value={formData.stock || 0}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      stock: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  className="w-full bg-neutral-100 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 rounded focus:border-black dark:focus:border-white outline-none transition-colors"
-                />
-              </div>
-            </div>
-            <div className="col-span-2 space-y-2">
+
+            <div className="col-span-12 space-y-2">
               <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
                 Descripción Corta
               </label>
@@ -771,7 +1017,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 </span>
               )}
             </div>
-            <div className="col-span-2 space-y-2">
+            <div className="col-span-12 space-y-2">
               <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
                 Descripción Larga
               </label>

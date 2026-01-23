@@ -375,15 +375,37 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
                 <h2 className="font-futuristic text-4xl uppercase font-light tracking-wide">
                   {product.name}
                 </h2>
-                <div className="flex items-center gap-6">
-                  <div className="text-3xl font-light">
-                    $
-                    {product.price
-                      ? product.price.toLocaleString()
-                      : product.category === "tech"
-                        ? "999"
-                        : "399"}
-                  </div>
+                <div className="flex items-center flex-wrap gap-4">
+                  {product.sale_price ? (
+                    <div className="flex items-baseline gap-4">
+                      <span className="text-3xl font-light text-red-600">
+                        ${product.sale_price.toLocaleString()}
+                      </span>
+                      <span className="text-xl line-through text-neutral-400">
+                        ${product.price ? product.price.toLocaleString() : "999"}
+                      </span>
+                      <span className="px-2 py-1 bg-red-100 text-red-600 text-[9px] font-futuristic tracking-widest rounded">
+                        -
+                        {product.price && product.sale_price
+                          ? Math.round(
+                              ((product.price - product.sale_price) /
+                                product.price) *
+                                100,
+                            )
+                          : 0}
+                        % OFF
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="text-3xl font-light">
+                      $
+                      {product.price
+                        ? product.price.toLocaleString()
+                        : product.category === "tech"
+                          ? "999"
+                          : "399"}
+                    </div>
+                  )}
 
                   <button
                     onClick={() => {

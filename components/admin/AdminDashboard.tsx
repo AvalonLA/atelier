@@ -11,6 +11,12 @@ export const AdminDashboard: React.FC = () => {
 
   // Stats Calculation
   const totalProducts = products.length;
+  // Calculate total stock value
+  const stockValue = products.reduce(
+    (acc, p) => acc + p.price * p.stock,
+    0,
+  );
+  
   const categories = products.reduce(
     (acc, p) => {
       acc[p.category] = (acc[p.category] || 0) + 1;
@@ -59,7 +65,11 @@ export const AdminDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-8">
         {[
           { label: "TOTAL_SKU", value: totalProducts, change: "ACTIVE" },
-          { label: "VALOR_STOCK", value: "$42k", change: "+5%" },
+          { 
+            label: "VALOR_STOCK", 
+            value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(stockValue), 
+            change: "ESTIMATED" 
+          },
           { label: "QUERIES_AI", value: "2,481", change: "+24%" },
           { label: "CONVERSION", value: "4.2%", change: "-2%" },
         ].map((stat, i) => (
@@ -67,11 +77,11 @@ export const AdminDashboard: React.FC = () => {
             key={i}
             className="p-8 border border-black/5 dark:border-white/5 bg-neutral-50 dark:bg-black/40 hover:border-black/20 dark:hover:border-white/20 transition-colors"
           >
-            <span className="font-futuristic text-[9px] tracking-widest text-neutral-600 block mb-4 uppercase">
+            <span className="font-futuristic text-[9px] tracking-widest text-neutral-600 block mb-4 uppercase truncate">
               {stat.label}
             </span>
             <div className="flex items-baseline gap-4">
-              <span className="text-3xl font-light tracking-tighter">
+              <span className="text-3xl font-light tracking-tighter truncate max-w-full block" title={typeof stat.value === 'string' ? stat.value : String(stat.value)}>
                 {stat.value}
               </span>
               <span
