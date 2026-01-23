@@ -17,7 +17,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const [email, setEmail] = useState("admin@atelier.com");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [counts, setCounts] = useState({ orders: 0, consultations: 0 });
+  const [counts, setCounts] = useState({
+    orders: 0,
+    consultations: 0,
+    lowStock: 0,
+  });
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "collection" | "orders" | "consultations" | "settings"
   >("dashboard");
@@ -44,9 +48,15 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
           .select("*", { count: "exact", head: true })
           .eq("status", "pending");
 
+        const { count: lowStockCount } = await supabase
+          .from("products")
+          .select("*", { count: "exact", head: true })
+          .lt("stock", 5);
+
         setCounts({
           orders: ordersCount || 0,
           consultations: consultationsCount || 0,
+          lowStock: lowStockCount || 0,
         });
       };
 
@@ -75,9 +85,21 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         )
         .subscribe();
 
+      const productsSubscription = supabase
+        .channel("admin_products_counts")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "products" },
+          () => {
+            fetchCounts();
+          },
+        )
+        .subscribe();
+
       return () => {
         supabase.removeChannel(ordersSubscription);
         supabase.removeChannel(consultationsSubscription);
+        supabase.removeChannel(productsSubscription);
       };
     }
   }, [isAuthenticated]);
@@ -310,6 +332,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                   counts.consultations > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 bg-red-600 w-1.5 h-1.5 rounded-full z-[100] pointer-events-none shadow-sm"></span>
                   )}
+                {isSidebarCollapsed &&
+                  tab.id === "collection" &&
+                  counts.lowStock > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 bg-red-600 w-1.5 h-1.5 rounded-full z-[100] pointer-events-none shadow-sm"></span>
+                  )}
               </div>
 
               <span
@@ -324,6 +351,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 {tab.id === "consultations" && counts.consultations > 0 && (
                   <span className="ml-2 text-red-600 font-sans font-bold text-[10px]">
                     {counts.consultations}
+                  </span>
+                )}
+                {tab.id === "collection" && counts.lowStock > 0 && (
+                  <span className="ml-2 text-red-600 font-sans font-bold text-[10px]">
+                    {counts.lowStock}
                   </span>
                 )}
               </span>

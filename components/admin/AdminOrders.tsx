@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { InventoryService, OrderService, supabase } from "../../services/supabase";
+import {
+  InventoryService,
+  OrderService,
+  supabase,
+} from "../../services/supabase";
 import { Order, Product, SaleItem } from "../../types";
 import { TableRowSkeleton } from "../ui/AdminSkeletons";
 

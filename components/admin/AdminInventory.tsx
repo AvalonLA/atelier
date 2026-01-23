@@ -369,7 +369,11 @@ export const AdminInventory: React.FC = () => {
           >
             <div className="flex items-center gap-3">
               <span className="text-xs font-futuristic tracking-widest uppercase">
-                Hay <span className="text-red-500 font-bold">{lowStockProducts.length}</span> productos con poco stock (&lt; 5)
+                Hay{" "}
+                <span className="text-red-500 font-bold">
+                  {lowStockProducts.length}
+                </span>{" "}
+                productos con poco stock (&lt; 5)
               </span>
             </div>
             <span className="text-[10px] uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">
