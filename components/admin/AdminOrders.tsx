@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { InventoryService, OrderService } from "../../services/supabase";
+import { InventoryService, OrderService, supabase } from "../../services/supabase";
 import { Order, Product, SaleItem } from "../../types";
 import { TableRowSkeleton } from "../ui/AdminSkeletons";
 
@@ -9,6 +9,7 @@ export const AdminOrders: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -21,6 +22,25 @@ export const AdminOrders: React.FC = () => {
   useEffect(() => {
     loadData();
     InventoryService.getProducts().then(setProducts).catch(console.error);
+
+    const channel = supabase
+      .channel("orders_updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "orders",
+        },
+        () => {
+          loadData();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadData = async () => {
@@ -37,7 +57,13 @@ export const AdminOrders: React.FC = () => {
 
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
-    return orders.filter(
+    let result = orders;
+
+    if (showPendingOnly) {
+      result = result.filter((o) => o.status === "pending");
+    }
+
+    return result.filter(
       (o) =>
         o.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
         o.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -45,7 +71,11 @@ export const AdminOrders: React.FC = () => {
           .toLowerCase()
           .includes(searchTerm.toLowerCase()),
     );
-  }, [orders, searchTerm]);
+  }, [orders, searchTerm, showPendingOnly]);
+
+  const pendingCount = useMemo(() => {
+    return orders.filter((o) => o.status === "pending").length;
+  }, [orders]);
 
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
   const paginatedOrders = filteredOrders.slice(
@@ -121,6 +151,28 @@ export const AdminOrders: React.FC = () => {
   return (
     <>
       <div className="space-y-8 animate-in fade-in duration-500">
+        {pendingCount > 0 && (
+          <div
+            onClick={() => {
+              setShowPendingOnly(!showPendingOnly);
+              setCurrentPage(1);
+            }}
+            className={`cursor-pointer mb-6 p-4 rounded-lg border transition-all flex items-center justify-between group ${
+              showPendingOnly
+                ? "bg-blue-100 border-blue-300 text-blue-900 dark:bg-blue-900/40 dark:border-blue-700 dark:text-blue-100"
+                : "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800/50 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+            }`}
+          >
+            <span className="text-xs font-futuristic tracking-widest uppercase">
+              Ordenes Pendientes:{" "}
+              <span className="text-red-500 font-bold">{pendingCount}</span>
+            </span>
+            <span className="text-[10px] uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">
+              {showPendingOnly ? "Mostrar todas" : "Filtrar pendientes"}
+            </span>
+          </div>
+        )}
+
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
             <h2 className="text-2xl font-light dark:text-white text-black">

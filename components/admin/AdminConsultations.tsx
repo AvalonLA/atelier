@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useProducts } from "../../hooks/useProducts";
-import { ConsultationService } from "../../services/supabase";
+import { ConsultationService, supabase } from "../../services/supabase";
 import { Consultation, Product } from "../../types";
 import { TableRowSkeleton } from "../ui/AdminSkeletons";
 
@@ -10,6 +10,7 @@ export const AdminConsultations: React.FC = () => {
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showPendingOnly, setShowPendingOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -21,6 +22,25 @@ export const AdminConsultations: React.FC = () => {
 
   useEffect(() => {
     loadData();
+
+    const channel = supabase
+      .channel("consultations_updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "consultations",
+        },
+        () => {
+          loadData();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadData = async () => {
@@ -36,12 +56,20 @@ export const AdminConsultations: React.FC = () => {
   };
 
   const filteredConsultations = useMemo(() => {
-    return consultations.filter(
+    let result = consultations;
+    if (showPendingOnly) {
+      result = result.filter((c) => c.status === "pending");
+    }
+    return result.filter(
       (c) =>
         c.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.query.toLowerCase().includes(searchTerm.toLowerCase()),
     );
-  }, [consultations, searchTerm]);
+  }, [consultations, searchTerm, showPendingOnly]);
+
+  const pendingCount = useMemo(() => {
+    return consultations.filter((c) => c.status === "pending").length;
+  }, [consultations]);
 
   const totalPages = Math.ceil(filteredConsultations.length / itemsPerPage);
   const paginatedConsultations = filteredConsultations.slice(
@@ -125,6 +153,28 @@ export const AdminConsultations: React.FC = () => {
   return (
     <>
       <div className="space-y-8 animate-in fade-in duration-500">
+        {pendingCount > 0 && (
+          <div
+            onClick={() => {
+              setShowPendingOnly(!showPendingOnly);
+              setCurrentPage(1);
+            }}
+            className={`cursor-pointer mb-6 p-4 rounded-lg border transition-all flex items-center justify-between group ${
+              showPendingOnly
+                ? "bg-amber-100 border-amber-300 text-amber-900 dark:bg-amber-900/40 dark:border-amber-700 dark:text-amber-100"
+                : "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800/50 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/30"
+            }`}
+          >
+            <span className="text-xs font-futuristic tracking-widest uppercase">
+              Consultas Pendientes:{" "}
+              <span className="text-red-500 font-bold">{pendingCount}</span>
+            </span>
+            <span className="text-[10px] uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">
+              {showPendingOnly ? "Mostrar todas" : "Filtrar pendientes"}
+            </span>
+          </div>
+        )}
+
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
             <h2 className="text-2xl font-light dark:text-white text-black">

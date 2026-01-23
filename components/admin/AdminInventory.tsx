@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useConfig } from "../../context/ConfigContext";
-import { InventoryService } from "../../services/supabase";
+import { InventoryService, supabase } from "../../services/supabase";
 import { Product } from "../../types";
 import { optimizeImage } from "../../utils/imageOptimizer";
 import { TableRowSkeleton } from "../ui/AdminSkeletons";
@@ -15,6 +15,7 @@ export const AdminInventory: React.FC = () => {
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
+  const [showLowStockOnly, setShowLowStockOnly] = useState(false);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,6 +23,25 @@ export const AdminInventory: React.FC = () => {
 
   useEffect(() => {
     loadProducts();
+
+    const channel = supabase
+      .channel("products_updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "products",
+        },
+        () => {
+          loadProducts();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [config.use_mock_data]);
 
   const loadProducts = async () => {
@@ -45,13 +65,23 @@ export const AdminInventory: React.FC = () => {
     setIsLoading(false);
   };
 
+  const lowStockProducts = useMemo(() => {
+    return products.filter((p) => (p.stock || 0) < 5);
+  }, [products]);
+
   const filteredProducts = useMemo(() => {
-    return products.filter(
+    let result = products;
+
+    if (showLowStockOnly) {
+      result = result.filter((p) => (p.stock || 0) < 5);
+    }
+
+    return result.filter(
       (p) =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.id.toLowerCase().includes(searchTerm.toLowerCase()),
     );
-  }, [products, searchTerm]);
+  }, [products, searchTerm, showLowStockOnly]);
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const paginatedProducts = filteredProducts.slice(
@@ -86,6 +116,7 @@ export const AdminInventory: React.FC = () => {
     }
   };
 
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
   const [bulkAction, setBulkAction] = useState<{
@@ -323,6 +354,30 @@ export const AdminInventory: React.FC = () => {
           </div>
         )}
 
+        {/* Low Stock Notification */}
+        {lowStockProducts.length > 0 && (
+          <div
+            onClick={() => {
+              setShowLowStockOnly(!showLowStockOnly);
+              setCurrentPage(1);
+            }}
+            className={`cursor-pointer mb-6 p-4 rounded-lg border transition-all flex items-center justify-between group ${
+              showLowStockOnly
+                ? "bg-amber-100 border-amber-300 text-amber-900 dark:bg-amber-900/40 dark:border-amber-700 dark:text-amber-100"
+                : "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800/50 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/30"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-futuristic tracking-widest uppercase">
+                Hay <span className="text-red-500 font-bold">{lowStockProducts.length}</span> productos con poco stock (&lt; 5)
+              </span>
+            </div>
+            <span className="text-[10px] uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">
+              {showLowStockOnly ? "Mostrar todos" : "Filtrar lista"}
+            </span>
+          </div>
+        )}
+
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
             <h2 className="text-2xl font-light dark:text-white text-black">
@@ -349,6 +404,24 @@ export const AdminInventory: React.FC = () => {
           )}
 
           <div className="flex gap-4 w-full md:w-auto">
+            {!isSelectionMode ? (
+              <button
+                onClick={() => setIsSelectionMode(true)}
+                className="bg-neutral-100 dark:bg-neutral-800 text-black dark:text-white px-4 py-2 text-[10px] font-futuristic tracking-widest hover:opacity-80 transition-opacity"
+              >
+                BULK SELECT
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setIsSelectionMode(false);
+                  setSelectedProducts([]);
+                }}
+                className="bg-red-50 text-red-600 border border-red-200 px-4 py-2 text-[10px] font-futuristic tracking-widest hover:bg-red-100 transition-colors"
+              >
+                CANCELAR BULK
+              </button>
+            )}
             <input
               type="text"
               placeholder="Buscar..."
@@ -417,25 +490,27 @@ export const AdminInventory: React.FC = () => {
             <table className="w-full text-left">
               <thead className="bg-neutral-50 dark:bg-neutral-900 text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase border-b border-neutral-200 dark:border-neutral-800">
                 <tr>
-                  <th className="px-6 py-4">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 rounded border-neutral-300"
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedProducts(
-                            paginatedProducts.map((p) => p.id),
-                          );
-                        } else {
-                          setSelectedProducts([]);
+                  {isSelectionMode && (
+                    <th className="px-6 py-4 animate-in fade-in zoom-in duration-300">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 rounded border-neutral-300"
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedProducts(
+                              paginatedProducts.map((p) => p.id),
+                            );
+                          } else {
+                            setSelectedProducts([]);
+                          }
+                        }}
+                        checked={
+                          selectedProducts.length > 0 &&
+                          selectedProducts.length >= paginatedProducts.length
                         }
-                      }}
-                      checked={
-                        selectedProducts.length > 0 &&
-                        selectedProducts.length >= paginatedProducts.length
-                      }
-                    />
-                  </th>
+                      />
+                    </th>
+                  )}
                   <th className="px-6 py-4">Imagen</th>
                   <th className="px-6 py-4">Producto</th>
                   <th className="px-6 py-4 hidden md:table-cell">Categoría</th>
@@ -478,20 +553,22 @@ export const AdminInventory: React.FC = () => {
                       key={product.id}
                       className={`group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors ${selectedProducts.includes(product.id) ? "bg-blue-50/50 dark:bg-blue-900/10" : ""}`}
                     >
-                      <td className="px-6 py-4">
-                        <input
-                          type="checkbox"
-                          className="w-4 h-4 rounded border-neutral-300"
-                          checked={selectedProducts.includes(product.id)}
-                          onChange={() => {
-                            setSelectedProducts((prev) =>
-                              prev.includes(product.id)
-                                ? prev.filter((id) => id !== product.id)
-                                : [...prev, product.id],
-                            );
-                          }}
-                        />
-                      </td>
+                      {isSelectionMode && (
+                        <td className="px-6 py-4 animate-in fade-in zoom-in duration-300">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 rounded border-neutral-300"
+                            checked={selectedProducts.includes(product.id)}
+                            onChange={() => {
+                              setSelectedProducts((prev) =>
+                                prev.includes(product.id)
+                                  ? prev.filter((id) => id !== product.id)
+                                  : [...prev, product.id],
+                              );
+                            }}
+                          />
+                        </td>
+                      )}
                       <td className="px-6 py-4">
                         <div className="w-12 h-12 bg-neutral-100 dark:bg-neutral-800 rounded overflow-hidden">
                           <img
@@ -527,12 +604,17 @@ export const AdminInventory: React.FC = () => {
                       <td className="px-6 py-4">
                         <span
                           className={`text-xs font-mono ${
-                            (product.stock || 0) > 0
-                              ? "text-neutral-500"
-                              : "text-red-500 font-bold"
+                            (product.stock || 0) < 5
+                              ? "text-red-500 font-bold"
+                              : "text-neutral-500"
                           }`}
                         >
                           {product.stock || 0}
+                          {(product.stock || 0) < 5 && (
+                            <span className="ml-1 text-[8px] uppercase tracking-tighter opacity-70">
+                              (Bajo)
+                            </span>
+                          )}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
