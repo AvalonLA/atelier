@@ -23,10 +23,12 @@ export const useProducts = () => {
             console.log("Using Supabase Data");
             try {
                 const data = await InventoryService.getProducts();
-                setProducts(data);
+                // Filter out hidden products for the public view
+                const visibleProducts = data.filter(p => p.visible !== false);
+                setProducts(visibleProducts);
             } catch (error) {
                 console.error("Failed to fetch Supabase products, falling back to mock:", error);
-                setProducts(allProducts);
+                setProducts(allProducts.filter(p => p.visible !== false));
             } finally {
                 setLoading(false);
             }

@@ -154,9 +154,12 @@ export const OrderService = {
     return data.map((order: any) => ({
       ...order,
       items: order.sale_items?.map((item: any) => ({
+        // Map backend structure to SaleItem
+        product_id: item.product_id,
+        product_name: item.products?.name || "Producto desconocido",
+        product_image: item.products?.image || "",
         quantity: item.quantity,
         price: item.price,
-        product: item.products,
       })),
     }));
   },
@@ -173,17 +176,17 @@ export const OrderService = {
 
     // 2. Create Sale Items
     const saleItems = items.map((item) => {
-      // Validate if item.id is a UUID. If not, send null.
+      // Validate if product_id is a UUID. If not, send null.
       const isUuid =
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-          item.id,
+          item.product_id,
         );
 
       return {
         order_id: orderData.id,
-        product_id: isUuid ? item.id : null,
+        product_id: isUuid ? item.product_id : null,
         quantity: item.quantity,
-        price: item.price || (item.category === "tech" ? 999 : 399),
+        price: item.price,
       };
     });
 

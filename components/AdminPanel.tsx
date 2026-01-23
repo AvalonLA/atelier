@@ -17,6 +17,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const [email, setEmail] = useState("admin@atelier.com");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [counts, setCounts] = useState({ orders: 0, consultations: 0 });
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "collection" | "orders" | "consultations" | "settings"
   >("dashboard");
@@ -29,6 +30,57 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       }
     });
   }, []); // Run once on mount
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchCounts = async () => {
+        const { count: ordersCount } = await supabase
+          .from("orders")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending");
+
+        const { count: consultationsCount } = await supabase
+          .from("consultations")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending");
+
+        setCounts({
+          orders: ordersCount || 0,
+          consultations: consultationsCount || 0,
+        });
+      };
+
+      fetchCounts();
+
+      // Subscribe to changes in Orders and Consultations tables
+      const ordersSubscription = supabase
+        .channel("admin_orders_counts")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "orders" },
+          () => {
+            fetchCounts();
+          },
+        )
+        .subscribe();
+
+      const consultationsSubscription = supabase
+        .channel("admin_consultations_counts")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "consultations" },
+          () => {
+            fetchCounts();
+          },
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(ordersSubscription);
+        supabase.removeChannel(consultationsSubscription);
+      };
+    }
+  }, [isAuthenticated]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
     window.innerWidth < 768,
   );
@@ -234,24 +286,44 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
               onClick={() => setActiveTab(tab.id as any)}
               className={`w-full font-futuristic text-[9px] tracking-[0.4em] flex items-center transition-all py-3 relative group ${isSidebarCollapsed ? "justify-center px-0" : "justify-start px-8 gap-4"} ${activeTab === tab.id ? "text-black dark:text-white bg-black/5 dark:bg-white/5 border-r-2 border-black dark:border-white" : "text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-300 hover:bg-black/5 dark:hover:bg-white/5 border-r-2 border-transparent"}`}
             >
-              <svg
-                className="w-4 h-4 min-w-[1rem]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="1"
-                  d={tab.icon}
-                />
-              </svg>
+              <div className="relative overflow-visible">
+                <svg
+                  className="w-4 h-4 min-w-[1rem]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1"
+                    d={tab.icon}
+                  />
+                </svg>
+                {isSidebarCollapsed && tab.id === "orders" && counts.orders > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-red-600 w-1.5 h-1.5 rounded-full z-[100] pointer-events-none shadow-sm"></span>
+                )}
+                {isSidebarCollapsed &&
+                  tab.id === "consultations" &&
+                  counts.consultations > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 bg-red-600 w-1.5 h-1.5 rounded-full z-[100] pointer-events-none shadow-sm"></span>
+                  )}
+              </div>
 
               <span
-                className={`truncate transition-all duration-300 ${isSidebarCollapsed ? "w-0 opacity-0 hidden" : "w-auto opacity-100"}`}
+                className={`truncate transition-all duration-300 relative overflow-visible ${isSidebarCollapsed ? "w-0 opacity-0 hidden" : "w-auto opacity-100"}`}
               >
                 {tab.label}
+                {tab.id === "orders" && counts.orders > 0 && (
+                  <span className="ml-2 text-red-600 font-sans font-bold text-[10px]">
+                    {counts.orders}
+                  </span>
+                )}
+                {tab.id === "consultations" && counts.consultations > 0 && (
+                  <span className="ml-2 text-red-600 font-sans font-bold text-[10px]">
+                    {counts.consultations}
+                  </span>
+                )}
               </span>
 
               {isSidebarCollapsed && (

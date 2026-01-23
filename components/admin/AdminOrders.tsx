@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { InventoryService, OrderService } from "../../services/supabase";
-import { Order, Product } from "../../types";
+import { Order, Product, SaleItem } from "../../types";
 import { TableRowSkeleton } from "../ui/AdminSkeletons";
 
 export const AdminOrders: React.FC = () => {
@@ -9,6 +9,8 @@ export const AdminOrders: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Modals
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -44,6 +46,12 @@ export const AdminOrders: React.FC = () => {
           .includes(searchTerm.toLowerCase()),
     );
   }, [orders, searchTerm]);
+
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
 
   const confirmDelete = (id: string) => {
     setOrderToDelete(id);
@@ -90,13 +98,12 @@ export const AdminOrders: React.FC = () => {
           data.address = `${data.address || ""}${city ? `, ${city}` : ""}${zipCode ? ` ${zipCode}` : ""}`;
         }
 
-        // Map items to the structure expected by Supabase service (flat object with id)
+        // Map items to the structure expected by Supabase service
         const serviceItems =
           items?.map((item) => ({
-            id: item.product.id,
+            product_id: item.product_id,
             quantity: item.quantity,
             price: item.price,
-            // note: item.note // Note is not yet in DB, ignoring for now to prevent errors
           })) || [];
 
         await OrderService.addOrder(data, serviceItems);
@@ -167,7 +174,7 @@ export const AdminOrders: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filteredOrders.map((order) => {
+                paginatedOrders.map((order) => {
                   const total =
                     order.items?.reduce(
                       (sum, item) => sum + item.price * item.quantity,
@@ -257,6 +264,34 @@ export const AdminOrders: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {filteredOrders.length > 0 && (
+          <div className="flex flex-col md:flex-row gap-4 justify-between items-center pt-4 border-t border-neutral-200 dark:border-neutral-800">
+            <span className="text-[10px] text-neutral-500 font-futuristic tracking-widest uppercase">
+              Mostrando {(currentPage - 1) * itemsPerPage + 1}-
+              {Math.min(currentPage * itemsPerPage, filteredOrders.length)} de{" "}
+              {filteredOrders.length}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 text-[10px] font-futuristic tracking-widest uppercase border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors rounded"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 text-[10px] font-futuristic tracking-widest uppercase bg-black dark:bg-white text-white dark:text-black hover:opacity-80 disabled:opacity-30 disabled:hover:opacity-30 transition-opacity rounded"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {isFormOpen && (
@@ -326,53 +361,51 @@ const OrderForm: React.FC<OrderFormProps> = ({
   const addItem = (product: Product) => {
     setFormData((prev) => {
       const currentItems = prev.items || [];
-      const existing = currentItems.find((i) => i.product.id === product.id);
-      if (existing) {
-        return {
-          ...prev,
-          items: currentItems.map((i) =>
-            i.product.id === product.id
-              ? { ...i, quantity: i.quantity + 1 }
-              : i,
-          ),
-        };
-      }
-      // Mock price if not in product (should be in product really, but using fallback logic like service)
-      const price = product.category === "tech" ? 999 : 399;
+      // Create a snapshot item
+      const newItem: SaleItem = {
+        product_id: product.id,
+        product_name: product.name,
+        product_image: product.image,
+        quantity: 1,
+        price: product.price || (product.category === "tech" ? 999 : 399),
+        note: "",
+      };
+
       return {
         ...prev,
-        items: [...currentItems, { product, quantity: 1, price, note: "" }],
+        items: [...currentItems, newItem],
       };
     });
     setProductSearch("");
     setIsProductListOpen(false);
   };
 
-  const removeItem = (productId: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      items: prev.items?.filter((i) => i.product.id !== productId) || [],
-    }));
+  const removeItem = (index: number) => {
+    setFormData((prev) => {
+      const newItems = [...(prev.items || [])];
+      newItems.splice(index, 1);
+      return { ...prev, items: newItems };
+    });
   };
 
-  const updateItemQuantity = (productId: string, qty: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      items:
-        prev.items?.map((i) =>
-          i.product.id === productId ? { ...i, quantity: Math.max(1, qty) } : i,
-        ) || [],
-    }));
+  const updateItemQuantity = (index: number, qty: number) => {
+    setFormData((prev) => {
+      const newItems = [...(prev.items || [])];
+      if (newItems[index]) {
+        newItems[index] = { ...newItems[index], quantity: Math.max(1, qty) };
+      }
+      return { ...prev, items: newItems };
+    });
   };
 
-  const updateItemNote = (productId: string, note: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      items:
-        prev.items?.map((i) =>
-          i.product.id === productId ? { ...i, note } : i,
-        ) || [],
-    }));
+  const updateItemNote = (index: number, note: string) => {
+    setFormData((prev) => {
+      const newItems = [...(prev.items || [])];
+      if (newItems[index]) {
+        newItems[index] = { ...newItems[index], note };
+      }
+      return { ...prev, items: newItems };
+    });
   };
 
   const total =
@@ -526,17 +559,17 @@ const OrderForm: React.FC<OrderFormProps> = ({
           <div className="flex-1 overflow-y-auto border border-neutral-100 dark:border-neutral-800 rounded p-2 space-y-2 min-h-[200px]">
             {formData.items?.map((item, idx) => (
               <div
-                key={item.product.id}
-                className="bg-neutral-50 dark:bg-neutral-900 p-3 rounded flex gap-3 items-start group"
+                key={`${item.product_id || "new"}-${idx}`}
+                className="bg-neutral-50 dark:bg-neutral-900 p-3 rounded flex gap-3 items-start group relative"
               >
                 <img
-                  src={item.product.image}
+                  src={item.product_image}
                   className="w-12 h-12 object-cover rounded"
                 />
                 <div className="flex-1 space-y-1">
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">
-                      {item.product.name}
+                      {item.product_name}
                     </span>
                     <span className="text-xs text-neutral-500">
                       ${item.price}
@@ -548,13 +581,10 @@ const OrderForm: React.FC<OrderFormProps> = ({
                     </label>
                     <input
                       type="number"
-                      className="w-12 p-1 text-xs bg-white dark:bg-black border rounded text-center"
+                      className="w-12 p-1 text-xs bg-transparent border-b border-neutral-200 dark:border-neutral-700 text-center focus:border-black dark:focus:border-white outline-none transition-colors"
                       value={item.quantity}
                       onChange={(e) =>
-                        updateItemQuantity(
-                          item.product.id,
-                          parseInt(e.target.value),
-                        )
+                        updateItemQuantity(idx, parseInt(e.target.value))
                       }
                       min="1"
                     />
@@ -563,18 +593,17 @@ const OrderForm: React.FC<OrderFormProps> = ({
                     </label>
                     <input
                       type="text"
-                      className="flex-1 p-1 text-xs bg-white dark:bg-black border rounded"
+                      className="flex-1 p-1 text-xs bg-transparent border-b border-neutral-200 dark:border-neutral-700 focus:border-black dark:focus:border-white outline-none transition-colors placeholder-neutral-400"
                       placeholder="Opcional..."
                       value={item.note || ""}
-                      onChange={(e) =>
-                        updateItemNote(item.product.id, e.target.value)
-                      }
+                      onChange={(e) => updateItemNote(idx, e.target.value)}
                     />
                   </div>
                 </div>
                 <button
-                  onClick={() => removeItem(item.product.id)}
-                  className="p-1 text-neutral-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => removeItem(idx)}
+                  className="p-1 text-neutral-400 hover:text-red-500 transition-colors"
+                  title="Eliminar"
                 >
                   <svg
                     className="w-4 h-4"

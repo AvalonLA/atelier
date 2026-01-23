@@ -5,6 +5,9 @@
     "category": "pendant",
     "description": "Sistema de suspensión de anillos LED concéntricos",
     "longDescription": "Diseño minimalista inspirado en la mecánica orbital. Anillos de aluminio cepillado con difusores acrílicos de alta transmitancia. Control de temperatura de color dinámico.",
+    "price": 1200,
+    "stock": 5,
+    "visible": true,
     "image": "https://images.pexels.com/photos/1123262/pexels-photo-1123262.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
     "gallery": [
       "https://images.pexels.com/photos/1123262/pexels-photo-1123262.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
@@ -24,6 +27,9 @@
     "category": "floor",
     "description": "Lámpara de pie escultórica con luz indirecta",
     "longDescription": "Una presencia arquitectónica en el espacio. El Monolith proyecta luz suave hacia las paredes o techo, creando atmósfera sin deslumbramiento. Acabado en negro mate texturizado.",
+    "price": 850,
+    "stock": 0,
+    "visible": true,
     "image": "https://images.pexels.com/photos/1112598/pexels-photo-1112598.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
     "gallery": [
       "https://images.pexels.com/photos/1112598/pexels-photo-1112598.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",

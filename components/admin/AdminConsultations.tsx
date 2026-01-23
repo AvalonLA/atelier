@@ -1,13 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ConsultationService } from "../../services/supabase";
-import { Consultation } from "../../types";
+import { Consultation, Product } from "../../types";
+import { useProducts } from "../../hooks/useProducts";
 import { TableRowSkeleton } from "../ui/AdminSkeletons";
 
 export const AdminConsultations: React.FC = () => {
+  const { products } = useProducts();
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Modal States
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -38,6 +42,12 @@ export const AdminConsultations: React.FC = () => {
         c.query.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [consultations, searchTerm]);
+
+  const totalPages = Math.ceil(filteredConsultations.length / itemsPerPage);
+  const paginatedConsultations = filteredConsultations.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
 
   const confirmDelete = (id: string) => {
     setItemToDelete(id);
@@ -169,7 +179,7 @@ export const AdminConsultations: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filteredConsultations.map((c) => (
+                paginatedConsultations.map((c) => (
                   <tr
                     key={c.id}
                     className="group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
@@ -197,7 +207,7 @@ export const AdminConsultations: React.FC = () => {
                             : "bg-yellow-100/10 text-yellow-600 border-yellow-200/20"
                         }`}
                       >
-                        {c.status}
+                        {c.status === "responded" ? "SOLVED" : c.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -248,11 +258,42 @@ export const AdminConsultations: React.FC = () => {
             </tbody>
           </table>
         </div>
+        {filteredConsultations.length > 0 && (
+          <div className="flex flex-col md:flex-row gap-4 justify-between items-center pt-4 border-t border-neutral-200 dark:border-neutral-800">
+            <span className="text-[10px] text-neutral-500 font-futuristic tracking-widest uppercase">
+              Mostrando {(currentPage - 1) * itemsPerPage + 1}-
+              {Math.min(
+                currentPage * itemsPerPage,
+                filteredConsultations.length,
+              )}{" "}
+              de {filteredConsultations.length}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 text-[10px] font-futuristic tracking-widest uppercase border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors rounded"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 text-[10px] font-futuristic tracking-widest uppercase bg-black dark:bg-white text-white dark:text-black hover:opacity-80 disabled:opacity-30 disabled:hover:opacity-30 transition-opacity rounded"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {isFormOpen && (
         <ConsultationForm
           item={editingItem}
+          availableProducts={products}
           onClose={() => {
             setIsFormOpen(false);
             setEditingItem(null);
@@ -278,12 +319,14 @@ export const AdminConsultations: React.FC = () => {
 
 interface ConsultationFormProps {
   item: Consultation | null;
+  availableProducts: Product[];
   onClose: () => void;
   onSave: (item: Partial<Consultation>) => Promise<void>;
 }
 
 const ConsultationForm: React.FC<ConsultationFormProps> = ({
   item,
+  availableProducts,
   onClose,
   onSave,
 }) => {
@@ -295,6 +338,16 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
       status: "pending",
     },
   );
+
+  const [isProductListOpen, setIsProductListOpen] = useState(false);
+
+  const filteredProducts = useMemo(() => {
+    const searchTerm = (formData.productName || "").toLowerCase();
+    if (!searchTerm) return availableProducts;
+    return availableProducts.filter((p) =>
+      p.name.toLowerCase().includes(searchTerm),
+    );
+  }, [availableProducts, formData.productName]);
 
   return (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 animate-in fade-in duration-200">
@@ -336,13 +389,13 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
                   })
                 }
               >
-                <option value="pending">PENDIENTE</option>
-                <option value="responded">RESPONDIDO</option>
+                <option value="pending">PENDING</option>
+                <option value="responded">SOLVED</option>
               </select>
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 relative">
             <label className="text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase">
               Producto Relacionado
             </label>
@@ -350,10 +403,36 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
               placeholder="MODELO / REFERENCIA"
               className="w-full bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 text-sm focus:border-black dark:focus:border-white outline-none transition-colors"
               value={formData.productName}
-              onChange={(e) =>
-                setFormData({ ...formData, productName: e.target.value })
-              }
+              onFocus={() => setIsProductListOpen(true)}
+              onBlur={() => setTimeout(() => setIsProductListOpen(false), 200)}
+              onChange={(e) => {
+                setFormData({ ...formData, productName: e.target.value });
+                setIsProductListOpen(true);
+              }}
             />
+            {isProductListOpen && filteredProducts.length > 0 && (
+              <div className="absolute top-full left-0 right-0 max-h-[200px] overflow-y-auto bg-white dark:bg-neutral-900 border border-t-0 border-neutral-200 dark:border-neutral-800 shadow-xl z-20">
+                {filteredProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    onClick={() => {
+                      setFormData({ ...formData, productName: product.name });
+                      setIsProductListOpen(false);
+                    }}
+                    className="flex items-center gap-3 p-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer border-b border-neutral-100 dark:border-neutral-800 last:border-0"
+                  >
+                    <img
+                      src={product.image}
+                      className="w-8 h-8 object-cover rounded"
+                      alt={product.name}
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{product.name}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">

@@ -5,7 +5,9 @@ export interface Product {
   description: string;
   longDescription: string;
   price?: number;
+  stock?: number;
   featured?: boolean;
+  visible?: boolean;
   image: string;
   gallery: string[];
   tag: string;
@@ -26,6 +28,16 @@ export interface Consultation {
   status: "pending" | "responded";
 }
 
+export interface SaleItem {
+  id?: string; // Optional (e.g. for new items before DB insert)
+  product_id?: string;
+  product_name: string;
+  product_image: string;
+  price: number;
+  quantity: number;
+  note?: string;
+}
+
 export interface Order {
   id: string;
   created_at: string;
@@ -34,12 +46,7 @@ export interface Order {
   email: string;
   address: string;
   status: "pending" | "processed" | "shipped" | "delivered" | "cancelled";
-  items?: {
-    product: Product;
-    quantity: number;
-    price: number;
-    note?: string;
-  }[];
+  items?: SaleItem[];
 }
 
 export interface AppConfig {

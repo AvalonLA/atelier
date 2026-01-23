@@ -4,6 +4,7 @@ import { useCart } from "../context/CartContext";
 import { useConfig } from "../context/ConfigContext";
 import { GeminiService } from "../services/geminiService";
 import { Product } from "../types";
+import { ConsultationService } from "../services/supabase";
 
 interface ProductViewProps {
   product: Product;
@@ -22,6 +23,37 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
   const [galleryIndex, setGalleryIndex] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  const [isConsultationOpen, setIsConsultationOpen] = useState(false);
+  const [consultationForm, setConsultationForm] = useState({
+    customerName: "",
+    query: "Hola quisiera tener mas información sobre este producto",
+  });
+
+  const handleConsultationSubmit = async () => {
+    if (!consultationForm.customerName.trim()) {
+      toast.error("POR FAVOR INGRESA TU NOMBRE");
+      return;
+    }
+
+    try {
+      await ConsultationService.addConsultation({
+        customerName: consultationForm.customerName,
+        productName: product.name,
+        query: consultationForm.query,
+      });
+      toast.success("CONSULTA ENVIADA CORRECTAMENTE");
+      setIsConsultationOpen(false);
+      setConsultationForm((prev) => ({
+        ...prev,
+        customerName: "",
+        query: "Hola quisiera tener mas información sobre este producto",
+      }));
+    } catch (error) {
+      console.error(error);
+      toast.error("ERROR AL ENVIAR CONSULTA");
+    }
+  };
 
   // Close on ESC or click outside
   useEffect(() => {
@@ -642,14 +674,90 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
         <h2 className="font-futuristic text-[10px] tracking-[0.5em] text-neutral-600 mb-8">
           ¿INTERESADO EN {product.name}?
         </h2>
-        <a
-          href="#contact-info"
-          onClick={onClose}
-          className="text-3xl md:text-5xl font-extralight border-b border-white/20 hover:border-white transition-colors pb-4 inline-block uppercase"
+        <button
+          onClick={() => setIsConsultationOpen(true)}
+          className="text-3xl md:text-5xl font-extralight border-b border-white/20 hover:border-white transition-colors pb-4 inline-block uppercase bg-transparent p-0"
         >
-          SOLICITAR COTIZACIÓN <span className="italic opacity-30">_TECH</span>
-        </a>
+          SOLICITAR TECH INFO <span className="italic opacity-30">_TECH</span>
+        </button>
       </section>
+
+      {isConsultationOpen && (
+        <div className="fixed inset-0 z-[60000] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/90 backdrop-blur-md"
+            onClick={() => setIsConsultationOpen(false)}
+          />
+          <div className="bg-white text-black w-full max-w-lg p-8 border border-neutral-200 shadow-2xl relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <h3 className="font-futuristic text-lg tracking-[0.2em] mb-8 uppercase border-b border-black/10 pb-4">
+              SOLICITUD DE INFORMACIÓN TÉCNICA
+            </h3>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase">
+                  Producto
+                </label>
+                <input
+                  disabled
+                  className="w-full bg-neutral-100 border border-neutral-200 p-3 text-sm text-neutral-500"
+                  value={product.name}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase">
+                  Tu Nombre
+                </label>
+                <input
+                  autoFocus
+                  placeholder="NOMBRE COMPLETO"
+                  className="w-full bg-neutral-50 border border-neutral-200 p-3 text-sm focus:border-black outline-none transition-colors"
+                  value={consultationForm.customerName}
+                  onChange={(e) =>
+                    setConsultationForm({
+                      ...consultationForm,
+                      customerName: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase">
+                  Consulta
+                </label>
+                <textarea
+                  placeholder="DETALLE DE LA CONSULTA..."
+                  className="w-full bg-neutral-50 border border-neutral-200 p-3 text-sm focus:border-black outline-none transition-colors min-h-[120px] resize-none"
+                  value={consultationForm.query}
+                  onChange={(e) =>
+                    setConsultationForm({
+                      ...consultationForm,
+                      query: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-4 justify-end mt-8 pt-4 border-t border-neutral-100">
+              <button
+                onClick={() => setIsConsultationOpen(false)}
+                className="px-6 py-3 text-[10px] font-futuristic tracking-widest text-neutral-500 hover:text-black transition-colors"
+              >
+                CANCELAR
+              </button>
+              <button
+                onClick={handleConsultationSubmit}
+                className="px-8 py-3 text-[10px] font-futuristic tracking-widest bg-black text-white hover:opacity-80 transition-opacity"
+              >
+                ENVIAR SOLICITUD
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

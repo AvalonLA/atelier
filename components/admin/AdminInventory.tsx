@@ -53,6 +53,7 @@ export const AdminInventory: React.FC = () => {
     );
   }, [products, searchTerm]);
 
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const paginatedProducts = filteredProducts.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
@@ -198,6 +199,7 @@ export const AdminInventory: React.FC = () => {
                   <th className="px-6 py-4">Producto</th>
                   <th className="px-6 py-4 hidden md:table-cell">Categoría</th>
                   <th className="px-6 py-4 hidden lg:table-cell">Tag</th>
+                  <th className="px-6 py-4">Stock</th>
                   <th className="px-6 py-4 text-right">Acciones</th>
                 </tr>
               </thead>
@@ -245,24 +247,40 @@ export const AdminInventory: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-medium text-sm dark:text-white text-black">
+                        <div className="font-medium text-sm dark:text-white text-black flex items-center gap-2">
                           {product.name}
+                          {product.visible === false && (
+                            <span className="text-[8px] bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded uppercase tracking-wider font-futuristic">
+                              Oculto
+                            </span>
+                          )}
                         </div>
                         <div className="text-xs text-neutral-500 truncate max-w-[200px]">
                           {product.description}
                         </div>
                       </td>
-                      <td className="px-6 py-4 hidden md:table-cell">
-                        <span className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 text-[9px] font-futuristic uppercase tracking-wider rounded">
-                          {product.category}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 hidden lg:table-cell">
-                        <span className="text-xs font-mono text-neutral-500">
-                          {product.tag}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 hidden md:table-cell">
+                      <span className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 text-[9px] font-futuristic uppercase tracking-wider rounded">
+                        {product.category}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 hidden lg:table-cell">
+                      <span className="text-xs font-mono text-neutral-500">
+                        {product.tag}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`text-xs font-mono ${
+                          (product.stock || 0) > 0
+                            ? "text-neutral-500"
+                            : "text-red-500 font-bold"
+                        }`}
+                      >
+                        {product.stock || 0}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2 transition-opacity">
                           <button
                             onClick={() => {
@@ -324,6 +342,11 @@ export const AdminInventory: React.FC = () => {
                     alt={product.name}
                     className="w-full h-full object-cover transition-transform group-hover:scale-105"
                   />
+                  {product.visible === false && (
+                    <div className="absolute top-2 left-2 bg-red-600 text-white text-[9px] font-futuristic uppercase px-2 py-1 rounded shadow-sm z-10 pointer-events-none">
+                      Oculto
+                    </div>
+                  )}
                   <div className="absolute top-2 right-2 flex gap-1 bg-white/90 dark:bg-black/90 p-1 rounded backdrop-blur-sm transition-opacity">
                     <button
                       onClick={() => {
@@ -378,9 +401,53 @@ export const AdminInventory: React.FC = () => {
                   <p className="text-xs text-neutral-500 line-clamp-2">
                     {product.description}
                   </p>
+                  <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex justify-between items-center">
+                    <span
+                      className={`text-[10px] font-mono ${
+                        (product.stock || 0) > 0
+                          ? "text-neutral-400"
+                          : "text-red-500 font-bold"
+                      }`}
+                    >
+                      Stock: {product.stock || 0}
+                    </span>
+                    {product.price && (
+                      <span className="text-[10px] font-medium dark:text-white">
+                        ${product.price}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {filteredProducts.length > 0 && (
+          <div className="flex flex-col md:flex-row gap-4 justify-between items-center pt-4 border-t border-neutral-200 dark:border-neutral-800">
+            <span className="text-[10px] text-neutral-500 font-futuristic tracking-widest uppercase">
+              Mostrando {(currentPage - 1) * itemsPerPage + 1}-
+              {Math.min(currentPage * itemsPerPage, filteredProducts.length)} de{" "}
+              {filteredProducts.length}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 text-[10px] font-futuristic tracking-widest uppercase border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors rounded"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 text-[10px] font-futuristic tracking-widest uppercase bg-black dark:bg-white text-white dark:text-black hover:opacity-80 disabled:opacity-30 disabled:hover:opacity-30 transition-opacity rounded"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -438,6 +505,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
           tag: "",
           specs: [],
           featured: false,
+          stock: 0,
+          visible: true,
         },
   );
 
@@ -612,41 +681,78 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 <option value="tech">Tech (Smart)</option>
               </select>
             </div>
-            <div className="flex items-center gap-3 pt-6">
-              <input
-                type="checkbox"
-                id="featured"
-                checked={formData.featured || false}
-                onChange={(e) =>
-                  setFormData({ ...formData, featured: e.target.checked })
-                }
-                className="w-4 h-4 bg-transparent border border-neutral-500 rounded focus:ring-0 checked:bg-white"
-              />
-              <label
-                htmlFor="featured"
-                className="text-[10px] font-futuristic tracking-widest uppercase cursor-pointer select-none"
-              >
-                Destacar en Home Page
-              </label>
+            <div className="flex flex-col gap-4 justify-center">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="featured"
+                  checked={formData.featured || false}
+                  onChange={(e) =>
+                    setFormData({ ...formData, featured: e.target.checked })
+                  }
+                  className="w-4 h-4 bg-transparent border border-neutral-500 rounded focus:ring-0 checked:bg-white accent-black dark:accent-white"
+                />
+                <label
+                  htmlFor="featured"
+                  className="text-[10px] font-futuristic tracking-widest uppercase cursor-pointer select-none"
+                >
+                  Destacar
+                </label>
+              </div>
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="visible"
+                  checked={formData.visible !== false}
+                  onChange={(e) =>
+                    setFormData({ ...formData, visible: e.target.checked })
+                  }
+                  className="w-4 h-4 bg-transparent border border-neutral-500 rounded focus:ring-0 checked:bg-white accent-black dark:accent-white"
+                />
+                <label
+                  htmlFor="visible"
+                  className="text-[10px] font-futuristic tracking-widest uppercase cursor-pointer select-none"
+                >
+                  Visible
+                </label>
+              </div>
             </div>
-            <div className="col-span-2 space-y-2">
-              <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
-                Precio (Opcional)
-              </label>
-              <input
-                type="number"
-                value={formData.price || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    price: e.target.value
-                      ? parseFloat(e.target.value)
-                      : undefined,
-                  })
-                }
-                placeholder="0.00"
-                className="w-full bg-neutral-100 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 rounded focus:border-black dark:focus:border-white outline-none transition-colors"
-              />
+            <div className="col-span-2 grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
+                  Precio
+                </label>
+                <input
+                  type="number"
+                  value={formData.price || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      price: e.target.value
+                        ? parseFloat(e.target.value)
+                        : undefined,
+                    })
+                  }
+                  placeholder="0.00"
+                  className="w-full bg-neutral-100 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 rounded focus:border-black dark:focus:border-white outline-none transition-colors"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
+                  Stock
+                </label>
+                <input
+                  type="number"
+                  value={formData.stock || 0}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      stock: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  className="w-full bg-neutral-100 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 rounded focus:border-black dark:focus:border-white outline-none transition-colors"
+                />
+              </div>
             </div>
             <div className="col-span-2 space-y-2">
               <label className="text-[10px] font-futuristic tracking-widest uppercase opacity-50">
