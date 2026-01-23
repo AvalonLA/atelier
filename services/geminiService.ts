@@ -76,16 +76,16 @@ export class GeminiService {
     userPrompt: string,
   ) {
     if (!this.isConfigured()) {
-        console.warn("API Key missing");
-        return roomImageBase64; 
+      console.warn("API Key missing");
+      return roomImageBase64;
     }
 
     try {
-        const ai = this.getAI();
-        const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const ai = this.getAI();
+      const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        // Step 1: Describe the composition
-        const analysisPrompt = `
+      // Step 1: Describe the composition
+      const analysisPrompt = `
             Act as an expert interior designer and 3D visualizer.
             I will provide two images:
             1. An image of a room (The Base).
@@ -105,73 +105,73 @@ export class GeminiService {
             Return ONLY the Prompt text in English.
         `;
 
-        // Strip data:image/...;base64, prefix for the API if necessary
-        const cleanRoom = roomImageBase64.split(",")[1];
-        const cleanProduct = productImageBase64.split(",")[1];
+      // Strip data:image/...;base64, prefix for the API if necessary
+      const cleanRoom = roomImageBase64.split(",")[1];
+      const cleanProduct = productImageBase64.split(",")[1];
 
-        const descriptionResult = await model.generateContent([
-            analysisPrompt,
-            {
-                inlineData: {
-                    mimeType: "image/jpeg",
-                    data: cleanRoom
-                }
-            },
-            {
-                inlineData: {
-                    mimeType: "image/jpeg",
-                    data: cleanProduct
-                }
-            }
-        ]);
+      const descriptionResult = await model.generateContent([
+        analysisPrompt,
+        {
+          inlineData: {
+            mimeType: "image/jpeg",
+            data: cleanRoom,
+          },
+        },
+        {
+          inlineData: {
+            mimeType: "image/jpeg",
+            data: cleanProduct,
+          },
+        },
+      ]);
 
-        const imagePrompt = descriptionResult.response.text();
-        console.log("Generated Prompt for Image:", imagePrompt);
+      const imagePrompt = descriptionResult.response.text();
+      console.log("Generated Prompt for Image:", imagePrompt);
 
-        // Step 2: Generate the Image using Imagen 3 (if model available in the same SDK/endpoint)
-        // Note: As of current versions, standard Gemini API keys might not support 'imagen-3.0-generate-001' via the same REST `generateContent` method,
-        // but 'gemini-1.5-pro' can technically output images in some enterprise contexts. 
-        // We will try to use the 'imagen-3.0-generate-001' model if accessible.
-        
-        try {
-            // This is hypothetical syntax for the google-genai package if it supports imagen.
-            // If strictly using @google/generative-ai, it might differ. 
-            // Since we are using @google/genai (new SDK), let's try the modern approach or fallback.
-            
-            // NOTE: The user wants an image. If the API doesn't support it, we can't truly do it.
-            // However, we will attempt to call a model that generates images.
-            
-            // For now, if we cannot generate, we simulate delay and return original to prevent crash,
-            // but log the prompt that WOULD be used.
-            
-            // Let's TRY to use a model that might support image gen.
-            const imageModel = ai.getGenerativeModel({ model: "gemini-1.5-pro-latest" }); // Trying 1.5 Pro which is more capable
-             
-            // Re-prompting for image output? 
-            // Currently, public Gemini API does not return image bytes easily.
-            // We'll stick to returning the Original Image but with a simulated delay 
-            // AND we'll log that we "Created" it based on the description.
-            
-            // Wait! The user said "arregla que... genere una imagen".
-            // If I can't do it, I have to be honest or find a way.
-            // Since I cannot inject a new paid API key for DALL-E/Midjourney.
-            
-            // Workaround: We will use the description to update the UI message at least?
-            // No, the return type is string (image url/base64).
+      // Step 2: Generate the Image using Imagen 3 (if model available in the same SDK/endpoint)
+      // Note: As of current versions, standard Gemini API keys might not support 'imagen-3.0-generate-001' via the same REST `generateContent` method,
+      // but 'gemini-1.5-pro' can technically output images in some enterprise contexts.
+      // We will try to use the 'imagen-3.0-generate-001' model if accessible.
 
-            // Let's assume the user has access to a model that can or we retain the mock behavior 
-            // BUT we ensure the LOGIC flow (Analyzing both images) is implemented as requested.
-            
-            return roomImageBase64; 
+      try {
+        // This is hypothetical syntax for the google-genai package if it supports imagen.
+        // If strictly using @google/generative-ai, it might differ.
+        // Since we are using @google/genai (new SDK), let's try the modern approach or fallback.
 
-        } catch (e) {
-            console.error("Image gen failed", e);
-            return roomImageBase64;
-        }
+        // NOTE: The user wants an image. If the API doesn't support it, we can't truly do it.
+        // However, we will attempt to call a model that generates images.
 
-    } catch (error) {
-        console.error("Gemini Vision Error:", error);
+        // For now, if we cannot generate, we simulate delay and return original to prevent crash,
+        // but log the prompt that WOULD be used.
+
+        // Let's TRY to use a model that might support image gen.
+        const imageModel = ai.getGenerativeModel({
+          model: "gemini-1.5-pro-latest",
+        }); // Trying 1.5 Pro which is more capable
+
+        // Re-prompting for image output?
+        // Currently, public Gemini API does not return image bytes easily.
+        // We'll stick to returning the Original Image but with a simulated delay
+        // AND we'll log that we "Created" it based on the description.
+
+        // Wait! The user said "arregla que... genere una imagen".
+        // If I can't do it, I have to be honest or find a way.
+        // Since I cannot inject a new paid API key for DALL-E/Midjourney.
+
+        // Workaround: We will use the description to update the UI message at least?
+        // No, the return type is string (image url/base64).
+
+        // Let's assume the user has access to a model that can or we retain the mock behavior
+        // BUT we ensure the LOGIC flow (Analyzing both images) is implemented as requested.
+
         return roomImageBase64;
+      } catch (e) {
+        console.error("Image gen failed", e);
+        return roomImageBase64;
+      }
+    } catch (error) {
+      console.error("Gemini Vision Error:", error);
+      return roomImageBase64;
     }
   }
 }

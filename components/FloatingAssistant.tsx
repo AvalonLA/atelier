@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { useConfig } from "../context/ConfigContext";
 import { GeminiService } from "../services/geminiService";
 import { ChatMessage } from "../types";
-import { useConfig } from "../context/ConfigContext";
 
 const FloatingAssistant: React.FC = () => {
   const { config } = useConfig();
@@ -11,7 +11,6 @@ const FloatingAssistant: React.FC = () => {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-
 
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -22,18 +21,22 @@ const FloatingAssistant: React.FC = () => {
       if (event.detail?.initialMessage) {
         // Use a short timeout to ensure state updates before sending
         setTimeout(() => {
-             handleSend(event.detail.initialMessage);
+          handleSend(event.detail.initialMessage);
         }, 100);
       }
     };
 
-    window.addEventListener("open-ai-assistant", handleOpenAssistant as EventListener);
+    window.addEventListener(
+      "open-ai-assistant",
+      handleOpenAssistant as EventListener,
+    );
     return () => {
-      window.removeEventListener("open-ai-assistant", handleOpenAssistant as EventListener);
+      window.removeEventListener(
+        "open-ai-assistant",
+        handleOpenAssistant as EventListener,
+      );
     };
   }, [messages, isTyping]); // Re-bind with latest state references if needed, or use functional state updates inside handleSend
-
-
 
   if (!config.ai_active) return null;
 
@@ -69,7 +72,7 @@ const FloatingAssistant: React.FC = () => {
   const handleSend = async (messageText?: string) => {
     const textToSend = messageText || input.trim();
     if (!textToSend || isTyping) return;
-    
+
     setInput("");
     setMessages((prev) => [...prev, { role: "user", text: textToSend }]);
     setIsTyping(true);
@@ -82,13 +85,19 @@ const FloatingAssistant: React.FC = () => {
       }));
 
     try {
-        const response = await GeminiService.getDesignAdvice(textToSend, history);
-        setIsTyping(false);
-        setMessages((prev) => [...prev, { role: "model", text: response || "" }]);
+      const response = await GeminiService.getDesignAdvice(textToSend, history);
+      setIsTyping(false);
+      setMessages((prev) => [...prev, { role: "model", text: response || "" }]);
     } catch (e) {
-        console.error("Chat error:", e);
-        setIsTyping(false);
-        setMessages((prev) => [...prev, { role: "model", text: "Error de conexión. Por favor verifica tu API Key." }]);
+      console.error("Chat error:", e);
+      setIsTyping(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "model",
+          text: "Error de conexión. Por favor verifica tu API Key.",
+        },
+      ]);
     }
   };
 

@@ -1,12 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { allProducts } from "../data/products"; // In real app, this would come from context/api
-import { Consultation } from "../types";
-import { AdminDashboard } from "./admin/AdminDashboard";
-import { AdminInventory } from "./admin/AdminInventory";
-import { AdminConsultations } from "./admin/AdminConsultations";
-import { AdminOrders } from "./admin/AdminOrders";
 import { useConfig } from "../context/ConfigContext";
 import { supabase } from "../services/supabase";
+import { AdminConsultations } from "./admin/AdminConsultations";
+import { AdminDashboard } from "./admin/AdminDashboard";
+import { AdminInventory } from "./admin/AdminInventory";
+import { AdminOrders } from "./admin/AdminOrders";
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -35,7 +33,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   );
 
   // Theme logic is now handled in ConfigContext
-  
+
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Close on ESC (only if authenticated to avoid accidental close during login)
@@ -63,27 +61,26 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     };
   }, [onClose]);
 
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password
-        });
 
-        if (error) {
-            alert("Invalid credentials");
-        } else if (data.session) {
-            setIsAuthenticated(true);
-        }
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        alert("Invalid credentials");
+      } else if (data.session) {
+        setIsAuthenticated(true);
+      }
     } catch (e) {
-        console.error(e);
-        alert("Login failed");
+      console.error(e);
+      alert("Login failed");
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -114,7 +111,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             ADMIN_ACCESS
           </h2>
           <form onSubmit={handleLogin} className="space-y-6">
-             <div className="space-y-2">
+            <div className="space-y-2">
               <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 block uppercase">
                 IDENTITY
               </label>
@@ -139,9 +136,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 placeholder="******"
               />
             </div>
-            <button 
-                disabled={isLoading}
-                className="w-full py-4 bg-black dark:bg-white text-white dark:text-black font-futuristic text-[10px] tracking-[0.3em] hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors disabled:opacity-50"
+            <button
+              disabled={isLoading}
+              className="w-full py-4 bg-black dark:bg-white text-white dark:text-black font-futuristic text-[10px] tracking-[0.3em] hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors disabled:opacity-50"
             >
               {isLoading ? "VERIFYING..." : "VERIFY_IDENTITY"}
             </button>
@@ -168,8 +165,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
           className={`p-8 flex items-start ${isSidebarCollapsed ? "justify-center" : "justify-between"}`}
         >
           {isSidebarCollapsed ? (
-             <span className="font-futuristic text-xl tracking-widest animate-in fade-in duration-300">A</span>
-          ): (
+            <span className="font-futuristic text-xl tracking-widest animate-in fade-in duration-300">
+              A
+            </span>
+          ) : (
             <div className="mb-0 animate-in fade-in duration-300">
               <h2 className="font-futuristic text-xl tracking-[0.3em] whitespace-nowrap">
                 ATELIER_OS
@@ -265,67 +264,73 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
         {/* Theme Toggle */}
         <div className="flex flex-col border-t border-black/5 dark:border-white/5">
-             <button
-              onClick={() => updateLocalConfig({ theme: config.theme === 'dark' ? 'light' : 'dark' })}
-              className={`font-futuristic text-[9px] tracking-[0.4em] text-neutral-500 hover:text-black dark:hover:text-white transition-colors flex items-center py-6 hover:bg-black/5 dark:hover:bg-white/5 ${isSidebarCollapsed ? "justify-center" : "px-8 gap-4"}`}
-              title={
-                config.theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
-              }
+          <button
+            onClick={() =>
+              updateLocalConfig({
+                theme: config.theme === "dark" ? "light" : "dark",
+              })
+            }
+            className={`font-futuristic text-[9px] tracking-[0.4em] text-neutral-500 hover:text-black dark:hover:text-white transition-colors flex items-center py-6 hover:bg-black/5 dark:hover:bg-white/5 ${isSidebarCollapsed ? "justify-center" : "px-8 gap-4"}`}
+            title={
+              config.theme === "dark"
+                ? "Switch to Light Mode"
+                : "Switch to Dark Mode"
+            }
+          >
+            {config.theme === "dark" ? (
+              <svg
+                className="w-4 h-4 min-w-[1rem]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                  d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="w-4 h-4 min-w-[1rem]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                />
+              </svg>
+            )}
+            {!isSidebarCollapsed && (
+              <span>{theme === "dark" ? "LIGHT_MODE" : "DARK_MODE"}</span>
+            )}
+          </button>
+
+          <button
+            onClick={onClose}
+            className={`font-futuristic text-[9px] tracking-[0.4em] text-neutral-500 hover:text-black dark:hover:text-white transition-colors flex items-center py-6 hover:bg-black/5 dark:hover:bg-white/5 border-t border-black/5 dark:border-white/5 ${isSidebarCollapsed ? "justify-center" : "px-8 gap-4"}`}
+            title="Volver al Sitio"
+          >
+            <svg
+              className="w-4 h-4 min-w-[1rem]"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              {config.theme === "dark" ? (
-                <svg
-                  className="w-4 h-4 min-w-[1rem]"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="1.5"
-                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="w-4 h-4 min-w-[1rem]"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="1.5"
-                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                  />
-                </svg>
-              )}
-              {!isSidebarCollapsed && (
-                <span>{theme === "dark" ? "LIGHT_MODE" : "DARK_MODE"}</span>
-              )}
-            </button>
-            
-            <button
-              onClick={onClose}
-              className={`font-futuristic text-[9px] tracking-[0.4em] text-neutral-500 hover:text-black dark:hover:text-white transition-colors flex items-center py-6 hover:bg-black/5 dark:hover:bg-white/5 border-t border-black/5 dark:border-white/5 ${isSidebarCollapsed ? "justify-center" : "px-8 gap-4"}`}
-              title="Volver al Sitio"
-            >
-               <svg
-                  className="w-4 h-4 min-w-[1rem]"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="1.5"
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
-               {!isSidebarCollapsed && "RETURN"}
-            </button>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.5"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            {!isSidebarCollapsed && "RETURN"}
+          </button>
         </div>
 
         <button
@@ -356,9 +361,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         className="flex-1 p-6 md:p-20 overflow-y-auto bg-white dark:bg-[#080808] transition-colors duration-300"
       >
         <div className="max-w-7xl mx-auto">
-          {activeTab === "dashboard" && (
-            <AdminDashboard />
-          )}
+          {activeTab === "dashboard" && <AdminDashboard />}
 
           {activeTab === "collection" && <AdminInventory />}
 
@@ -386,18 +389,22 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     <input
                       type="text"
                       value={config.site_name}
-                      onChange={(e) => updateLocalConfig({ site_name: e.target.value })}
+                      onChange={(e) =>
+                        updateLocalConfig({ site_name: e.target.value })
+                      }
                       className="w-full bg-neutral-100 dark:bg-black border border-black/10 dark:border-white/10 p-4 outline-none focus:border-black dark:focus:border-white transition-colors text-sm font-light"
                     />
                   </div>
-                   <div className="space-y-4">
+                  <div className="space-y-4">
                     <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 uppercase block">
                       SITE_DESCRIPTION
                     </label>
                     <input
                       type="text"
                       value={config.site_description}
-                      onChange={(e) => updateLocalConfig({ site_description: e.target.value })}
+                      onChange={(e) =>
+                        updateLocalConfig({ site_description: e.target.value })
+                      }
                       className="w-full bg-neutral-100 dark:bg-black border border-black/10 dark:border-white/10 p-4 outline-none focus:border-black dark:focus:border-white transition-colors text-sm font-light"
                     />
                   </div>
@@ -409,7 +416,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     <input
                       type="text"
                       value={config.hero_headline || ""}
-                      onChange={(e) => updateLocalConfig({ hero_headline: e.target.value })}
+                      onChange={(e) =>
+                        updateLocalConfig({ hero_headline: e.target.value })
+                      }
                       className="w-full bg-neutral-100 dark:bg-black border border-black/10 dark:border-white/10 p-4 outline-none focus:border-black dark:focus:border-white transition-colors text-xl font-light"
                       placeholder="ATELIER"
                     />
@@ -421,7 +430,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     <input
                       type="text"
                       value={config.hero_subheadline || ""}
-                      onChange={(e) => updateLocalConfig({ hero_subheadline: e.target.value })}
+                      onChange={(e) =>
+                        updateLocalConfig({ hero_subheadline: e.target.value })
+                      }
                       className="w-full bg-neutral-100 dark:bg-black border border-black/10 dark:border-white/10 p-4 outline-none focus:border-black dark:focus:border-white transition-colors text-sm font-light"
                       placeholder="LIGHTING_TECH"
                     />
@@ -432,20 +443,24 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     </label>
                     <textarea
                       value={config.hero_text || ""}
-                      onChange={(e) => updateLocalConfig({ hero_text: e.target.value })}
+                      onChange={(e) =>
+                        updateLocalConfig({ hero_text: e.target.value })
+                      }
                       className="w-full bg-neutral-100 dark:bg-black border border-black/10 dark:border-white/10 p-4 outline-none focus:border-black dark:focus:border-white transition-colors text-sm font-light resize-none h-32"
                       placeholder="Texto principal del Hero..."
                     />
                   </div>
 
-                   <div className="space-y-4">
+                  <div className="space-y-4">
                     <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 uppercase block">
                       OPENING_HOURS
                     </label>
                     <input
                       type="text"
                       value={config.opening_hours}
-                      onChange={(e) => updateLocalConfig({ opening_hours: e.target.value })}
+                      onChange={(e) =>
+                        updateLocalConfig({ opening_hours: e.target.value })
+                      }
                       className="w-full bg-neutral-100 dark:bg-black border border-black/10 dark:border-white/10 p-4 outline-none focus:border-black dark:focus:border-white transition-colors text-sm font-light"
                     />
                   </div>
@@ -457,7 +472,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     <input
                       type="text"
                       value={config.contact_phone}
-                      onChange={(e) => updateLocalConfig({ contact_phone: e.target.value })}
+                      onChange={(e) =>
+                        updateLocalConfig({ contact_phone: e.target.value })
+                      }
                       className="w-full bg-neutral-100 dark:bg-black border border-black/10 dark:border-white/10 p-4 outline-none focus:border-black dark:focus:border-white transition-colors text-sm font-light"
                       placeholder="+54 9 11 1234 5678"
                     />
@@ -482,11 +499,22 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 uppercase block">
                       AI_FEATURES (CHAT & SIMULATION)
                     </label>
-                    <div className="flex items-center gap-4 cursor-pointer" onClick={() => updateLocalConfig({ ai_active: !config.ai_active })}>
-                      <div className={`w-12 h-6 rounded-full relative transition-colors ${config.ai_active ? "bg-green-500" : "bg-neutral-300 dark:bg-neutral-700"}`}>
-                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-md ${config.ai_active ? "left-7" : "left-1"}`}></div>
+                    <div
+                      className="flex items-center gap-4 cursor-pointer"
+                      onClick={() =>
+                        updateLocalConfig({ ai_active: !config.ai_active })
+                      }
+                    >
+                      <div
+                        className={`w-12 h-6 rounded-full relative transition-colors ${config.ai_active ? "bg-green-500" : "bg-neutral-300 dark:bg-neutral-700"}`}
+                      >
+                        <div
+                          className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-md ${config.ai_active ? "left-7" : "left-1"}`}
+                        ></div>
                       </div>
-                      <span className={`text-[10px] font-futuristic tracking-widest transition-colors ${config.ai_active ? "text-green-500" : "text-neutral-500"}`}>
+                      <span
+                        className={`text-[10px] font-futuristic tracking-widest transition-colors ${config.ai_active ? "text-green-500" : "text-neutral-500"}`}
+                      >
                         {config.ai_active ? "ACTIVE" : "DISABLED"}
                       </span>
                     </div>
@@ -496,16 +524,32 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 uppercase block">
                       DATA_SOURCE
                     </label>
-                     <div className="flex items-center gap-4 cursor-pointer" onClick={() => updateLocalConfig({ use_mock_data: !config.use_mock_data })}>
-                       <div className={`w-12 h-6 rounded-full relative transition-colors ${!config.use_mock_data ? "bg-blue-500" : "bg-neutral-300 dark:bg-neutral-700"}`}>
-                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-md ${!config.use_mock_data ? "left-7" : "left-1"}`}></div>
+                    <div
+                      className="flex items-center gap-4 cursor-pointer"
+                      onClick={() =>
+                        updateLocalConfig({
+                          use_mock_data: !config.use_mock_data,
+                        })
+                      }
+                    >
+                      <div
+                        className={`w-12 h-6 rounded-full relative transition-colors ${!config.use_mock_data ? "bg-blue-500" : "bg-neutral-300 dark:bg-neutral-700"}`}
+                      >
+                        <div
+                          className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-md ${!config.use_mock_data ? "left-7" : "left-1"}`}
+                        ></div>
                       </div>
-                      <span className={`text-[10px] font-futuristic tracking-widest transition-colors ${!config.use_mock_data ? "text-blue-500" : "text-neutral-500"}`}>
-                        {!config.use_mock_data ? "SUPABASE (REAL)" : "MOCK DATA (LOCAL)"}
+                      <span
+                        className={`text-[10px] font-futuristic tracking-widest transition-colors ${!config.use_mock_data ? "text-blue-500" : "text-neutral-500"}`}
+                      >
+                        {!config.use_mock_data
+                          ? "SUPABASE (REAL)"
+                          : "MOCK DATA (LOCAL)"}
                       </span>
                     </div>
-                     <p className="text-[9px] text-neutral-400 mt-2">
-                      Cambia entre los datos de prueba locales y la base de datos real de Supabase.
+                    <p className="text-[9px] text-neutral-400 mt-2">
+                      Cambia entre los datos de prueba locales y la base de
+                      datos real de Supabase.
                     </p>
                   </div>
                 </div>
@@ -515,11 +559,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     SYSTEM_STATUS
                   </h4>
                   <p className="text-xs font-light text-neutral-500 mb-8 leading-relaxed">
-                    La configuración se sincroniza en tiempo real con la base de datos distribuida.
-                    El estado de la IA afecta tanto al Chat como a la Simulación de Productos.
+                    La configuración se sincroniza en tiempo real con la base de
+                    datos distribuida. El estado de la IA afecta tanto al Chat
+                    como a la Simulación de Productos.
                   </p>
                   <div className="text-[10px] font-futuristic tracking-widest text-neutral-400">
-                      ID_CONFIG: {config.id || "LOCAL"}
+                    ID_CONFIG: {config.id || "LOCAL"}
                   </div>
                 </div>
               </div>

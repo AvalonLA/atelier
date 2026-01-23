@@ -7,84 +7,125 @@ const ContactInfo: React.FC = () => {
   const { config, updateLocalConfig } = useConfig();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  
+
   const [editValues, setEditValues] = useState({
-      headline: "",
-      subheadline: "",
-      address: "",
-      email: "",
-      phone: "",
-      opening: ""
+    headline: "",
+    subheadline: "",
+    address: "",
+    email: "",
+    phone: "",
+    opening: "",
   });
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setIsAdmin(!!session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => setIsAdmin(!!session));
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => setIsAdmin(!!session));
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) =>
+      setIsAdmin(!!session),
+    );
     return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
     if (!isEditing) {
-        setEditValues({
-            headline: config.contact_headline || "UBICACIÓN_FLAGSHIP",
-            subheadline: config.contact_subheadline || "ESTAMOS EN <br/> <span class='opacity-40 italic'>EL CENTRO.</span>",
-            address: config.contact_address || "Calle 12 y 50 N° 820, La Plata",
-            email: config.contact_email,
-            phone: config.contact_phone,
-            opening: config.opening_hours
-        });
+      setEditValues({
+        headline: config.contact_headline || "UBICACIÓN_FLAGSHIP",
+        subheadline:
+          config.contact_subheadline ||
+          "ESTAMOS EN <br/> <span class='opacity-40 italic'>EL CENTRO.</span>",
+        address: config.contact_address || "Calle 12 y 50 N° 820, La Plata",
+        email: config.contact_email,
+        phone: config.contact_phone,
+        opening: config.opening_hours,
+      });
     }
   }, [isEditing, config]);
 
   const handleSave = async () => {
     await updateLocalConfig({
-        contact_headline: editValues.headline,
-        contact_subheadline: editValues.subheadline,
-        contact_address: editValues.address,
-        contact_email: editValues.email,
-        contact_phone: editValues.phone,
-        opening_hours: editValues.opening
+      contact_headline: editValues.headline,
+      contact_subheadline: editValues.subheadline,
+      contact_address: editValues.address,
+      contact_email: editValues.email,
+      contact_phone: editValues.phone,
+      opening_hours: editValues.opening,
     });
     setIsEditing(false);
   };
 
   return (
-    <section id="contact-info" className="py-32 px-6 bg-[#0a0a0a] relative group/contact">
-       {/* Admin Controls */}
-       {isAdmin && (
+    <section
+      id="contact-info"
+      className="py-32 px-6 bg-[#0a0a0a] relative group/contact"
+    >
+      {/* Admin Controls */}
+      {isAdmin && (
         <div className="absolute top-24 right-6 z-50 flex gap-2">
-            {!isEditing ? (
-                <button 
-                    onClick={() => setIsEditing(true)}
-                    className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all opacity-0 group-hover/contact:opacity-100"
-                    title="Editar Info"
+          {!isEditing ? (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all opacity-0 group-hover/contact:opacity-100"
+              title="Editar Info"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                />
+              </svg>
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={handleSave}
+                className="p-2 bg-green-500/80 backdrop-blur-md rounded-full text-white hover:bg-green-500 transition-all"
+                title="Guardar Cambios"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                </button>
-            ) : (
-                <>
-                    <button 
-                        onClick={handleSave}
-                        className="p-2 bg-green-500/80 backdrop-blur-md rounded-full text-white hover:bg-green-500 transition-all"
-                        title="Guardar Cambios"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                    </button>
-                     <button 
-                        onClick={() => setIsEditing(false)}
-                        className="p-2 bg-red-500/80 backdrop-blur-md rounded-full text-white hover:bg-red-500 transition-all"
-                         title="Cancelar Edición"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </>
-            )}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="p-2 bg-red-500/80 backdrop-blur-md rounded-full text-white hover:bg-red-500 transition-all"
+                title="Cancelar Edición"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </>
+          )}
         </div>
       )}
 
@@ -94,26 +135,36 @@ const ContactInfo: React.FC = () => {
             <div>
               <h3 className="font-futuristic text-[10px] tracking-[0.5em] text-neutral-500 mb-4 uppercase">
                 {isEditing ? (
-                     <input 
-                        value={editValues.headline}
-                        onChange={e => setEditValues({...editValues, headline: e.target.value})}
-                        className="bg-transparent border-b border-white/20 outline-none w-full focus:border-white transition-colors"
-                     />
+                  <input
+                    value={editValues.headline}
+                    onChange={(e) =>
+                      setEditValues({ ...editValues, headline: e.target.value })
+                    }
+                    className="bg-transparent border-b border-white/20 outline-none w-full focus:border-white transition-colors"
+                  />
                 ) : (
-                    <span>{config.contact_headline || "UBICACIÓN_FLAGSHIP"}</span>
+                  <span>{config.contact_headline || "UBICACIÓN_FLAGSHIP"}</span>
                 )}
               </h3>
               <h2 className="text-4xl md:text-6xl font-extralight tracking-tighter">
                 {isEditing ? (
-                     <RichTextEditor
-                        tagName="h2"
-                        initialValue={editValues.subheadline}
-                        onChange={(val: string) => setEditValues({...editValues, subheadline: val})}
-                        className="bg-transparent border border-white/20 outline-none w-full h-auto min-h-[8rem] p-2 focus:border-white transition-colors text-3xl font-extralight tracking-tighter"
-                        placeholder="Subtítulo..."
-                     />
+                  <RichTextEditor
+                    tagName="h2"
+                    initialValue={editValues.subheadline}
+                    onChange={(val: string) =>
+                      setEditValues({ ...editValues, subheadline: val })
+                    }
+                    className="bg-transparent border border-white/20 outline-none w-full h-auto min-h-[8rem] p-2 focus:border-white transition-colors text-3xl font-extralight tracking-tighter"
+                    placeholder="Subtítulo..."
+                  />
                 ) : (
-                    <span dangerouslySetInnerHTML={{ __html: config.contact_subheadline || "ESTAMOS EN <br/> <span class='opacity-40 italic'>EL CENTRO.</span>" }} />
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        config.contact_subheadline ||
+                        "ESTAMOS EN <br/> <span class='opacity-40 italic'>EL CENTRO.</span>",
+                    }}
+                  />
                 )}
               </h2>
             </div>
@@ -121,48 +172,77 @@ const ContactInfo: React.FC = () => {
             <div className="space-y-8">
               <div className="flex items-start gap-6">
                 <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-4 h-4 text-neutral-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
                 <div>
-                  <h4 className="font-futuristic text-[9px] tracking-widest text-neutral-500 mb-2 uppercase">UBICACIÓN</h4>
+                  <h4 className="font-futuristic text-[9px] tracking-widest text-neutral-500 mb-2 uppercase">
+                    UBICACIÓN
+                  </h4>
                   {isEditing ? (
-                     <input 
-                        value={editValues.address}
-                        onChange={e => setEditValues({...editValues, address: e.target.value})}
-                        className="text-xl font-light bg-transparent border-b border-white/20 outline-none w-full focus:border-white"
-                     />
+                    <input
+                      value={editValues.address}
+                      onChange={(e) =>
+                        setEditValues({
+                          ...editValues,
+                          address: e.target.value,
+                        })
+                      }
+                      className="text-xl font-light bg-transparent border-b border-white/20 outline-none w-full focus:border-white"
+                    />
                   ) : (
-                    <p className="text-xl font-light">{config.contact_address || "Calle 12 y 50 N° 820, La Plata"}</p>
+                    <p className="text-xl font-light">
+                      {config.contact_address ||
+                        "Calle 12 y 50 N° 820, La Plata"}
+                    </p>
                   )}
                 </div>
               </div>
 
               <div className="flex items-start gap-6">
                 <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  <svg
+                    className="w-4 h-4 text-neutral-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                    />
                   </svg>
                 </div>
                 <div>
-                  <h4 className="font-futuristic text-[9px] tracking-widest text-neutral-500 mb-2 uppercase">WHATSAPP</h4>
+                  <h4 className="font-futuristic text-[9px] tracking-widest text-neutral-500 mb-2 uppercase">
+                    WHATSAPP
+                  </h4>
                   {isEditing ? (
-                     <input 
-                        value={editValues.phone}
-                        onChange={e => setEditValues({...editValues, phone: e.target.value})}
-                        className="text-xl font-light bg-transparent border-b border-white/20 outline-none w-full focus:border-white"
-                     />
+                    <input
+                      value={editValues.phone}
+                      onChange={(e) =>
+                        setEditValues({ ...editValues, phone: e.target.value })
+                      }
+                      className="text-xl font-light bg-transparent border-b border-white/20 outline-none w-full focus:border-white"
+                    />
                   ) : (
-                    <button 
-                        onClick={() => {
-                            const phone = config.contact_phone.replace(/\D/g, "");
-                            window.open(`https://wa.me/${phone}`, "_blank");
-                        }}
-                        className="text-xl font-light hover:text-green-400 transition-colors"
+                    <button
+                      onClick={() => {
+                        const phone = config.contact_phone.replace(/\D/g, "");
+                        window.open(`https://wa.me/${phone}`, "_blank");
+                      }}
+                      className="text-xl font-light hover:text-green-400 transition-colors"
                     >
-                        {config.contact_phone}
+                      {config.contact_phone}
                     </button>
                   )}
                 </div>
@@ -170,45 +250,69 @@ const ContactInfo: React.FC = () => {
 
               <div className="flex items-start gap-6">
                 <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-4 h-4 text-neutral-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div>
-                  <h4 className="font-futuristic text-[9px] tracking-widest text-neutral-500 mb-2 uppercase">HORARIOS</h4>
+                  <h4 className="font-futuristic text-[9px] tracking-widest text-neutral-500 mb-2 uppercase">
+                    HORARIOS
+                  </h4>
                   {isEditing ? (
-                     <input 
-                        value={editValues.opening}
-                        onChange={e => setEditValues({...editValues, opening: e.target.value})}
-                        className="text-sm font-light text-neutral-400 bg-transparent border-b border-white/20 outline-none w-full focus:border-white"
-                     />
+                    <input
+                      value={editValues.opening}
+                      onChange={(e) =>
+                        setEditValues({
+                          ...editValues,
+                          opening: e.target.value,
+                        })
+                      }
+                      className="text-sm font-light text-neutral-400 bg-transparent border-b border-white/20 outline-none w-full focus:border-white"
+                    />
                   ) : (
-                    <p className="text-sm font-light text-neutral-400">{config.opening_hours}</p>
+                    <p className="text-sm font-light text-neutral-400">
+                      {config.opening_hours}
+                    </p>
                   )}
                 </div>
               </div>
 
-               {isEditing && (
-                 <div className="border border-white/10 p-4 rounded bg-white/5 space-y-4">
-                     <h4 className="font-futuristic text-[9px] tracking-widest text-white/50 mb-2 uppercase">CONTACTO DIRECTO</h4>
-                     <div>
-                        <label className="text-xs text-neutral-500 block mb-1">Email</label>
-                        <input 
-                            value={editValues.email}
-                            onChange={e => setEditValues({...editValues, email: e.target.value})}
-                            className="bg-transparent border-b border-white/20 outline-none w-full focus:border-white text-sm"
-                        />
-                     </div>
-                     <div>
-                        <label className="text-xs text-neutral-500 block mb-1">Teléfono</label>
-                        <input 
-                            value={editValues.phone}
-                            onChange={e => setEditValues({...editValues, phone: e.target.value})}
-                            className="bg-transparent border-b border-white/20 outline-none w-full focus:border-white text-sm"
-                        />
-                     </div>
-                 </div>
-               )}
+              {isEditing && (
+                <div className="border border-white/10 p-4 rounded bg-white/5 space-y-4">
+                  <h4 className="font-futuristic text-[9px] tracking-widest text-white/50 mb-2 uppercase">
+                    CONTACTO DIRECTO
+                  </h4>
+                  <div>
+                    <label className="text-xs text-neutral-500 block mb-1">
+                      Email
+                    </label>
+                    <input
+                      value={editValues.email}
+                      onChange={(e) =>
+                        setEditValues({ ...editValues, email: e.target.value })
+                      }
+                      className="bg-transparent border-b border-white/20 outline-none w-full focus:border-white text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-neutral-500 block mb-1">
+                      Teléfono
+                    </label>
+                    <input
+                      value={editValues.phone}
+                      onChange={(e) =>
+                        setEditValues({ ...editValues, phone: e.target.value })
+                      }
+                      className="bg-transparent border-b border-white/20 outline-none w-full focus:border-white text-sm"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

@@ -347,6 +347,43 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
             </button>
           ) : (
             <>
+              {showAll && (
+                <>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    accept="image/*"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`p-2 bg-blue-500/80 backdrop-blur-md rounded-full text-white hover:bg-blue-500 transition-all ${isUploading ? "animate-pulse w-auto px-4" : ""}`}
+                    title="Cambiar Imagen"
+                    disabled={isUploading}
+                  >
+                    {isUploading ? (
+                      <span className="text-[10px] font-futuristic tracking-wider">
+                        OPTIMIZANDO...
+                      </span>
+                    ) : (
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                </>
+              )}
               <button
                 onClick={handleSave}
                 className="p-2 bg-green-500/80 backdrop-blur-md rounded-full text-white hover:bg-green-500 transition-all"
@@ -392,32 +429,6 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
 
       {showAll && (
         <div className="relative h-screen w-full flex items-center justify-center overflow-hidden mb-24 group/hero">
-          {isEditing && (
-            <div className="absolute top-24 left-4 z-50 flex gap-2">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImageUpload}
-                className="hidden"
-                accept="image/*"
-              />
-               <button 
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`p-2 bg-blue-500/80 backdrop-blur-md rounded-full text-white hover:bg-blue-500 transition-all ${isUploading ? 'animate-pulse w-auto px-4' : ''}`}
-                  title="Cambiar Imagen"
-                  disabled={isUploading}
-              >
-                  {isUploading ? (
-                      <span className="text-[10px] font-futuristic tracking-wider">OPTIMIZANDO...</span>
-                  ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                  )}
-              </button>
-            </div>
-          )}
-
           <div 
             className="absolute inset-0 w-full h-full"
             style={{
@@ -517,12 +528,7 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
                 <span
                   dangerouslySetInnerHTML={{
                     __html: showAll
-                      ? config.catalog_headline_full || "SISTEMAS ATELIER."
-                      : config.catalog_headline || "DISEÑO EXPANSIVO.",
-                  }}
-                />
-              )}
-            </h2>
+                      ? config.catalog_headline_full ||
                         "SISTEMAS <br/> <span class='opacity-40 italic'>ATELIER.</span>"
                       : config.catalog_headline ||
                         "DISEÑO <br/> <span class='opacity-40 italic'>EXPANSIVO.</span>",

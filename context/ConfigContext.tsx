@@ -92,14 +92,14 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Sync theme with config
   useEffect(() => {
-      if (config.theme) {
-          const root = window.document.documentElement;
-          if (config.theme === "dark") {
-              root.classList.add("dark");
-          } else {
-              root.classList.remove("dark");
-          }
+    if (config.theme) {
+      const root = window.document.documentElement;
+      if (config.theme === "dark") {
+        root.classList.add("dark");
+      } else {
+        root.classList.remove("dark");
       }
+    }
   }, [config.theme]);
 
   const loadConfig = async () => {

@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useConfig } from "../context/ConfigContext";
-import { supabase, InventoryService } from "../services/supabase";
+import { InventoryService, supabase } from "../services/supabase";
 import { optimizeImage } from "../utils/imageOptimizer";
 import RichTextEditor from "./ui/RichTextEditor";
 
@@ -11,13 +11,13 @@ const Hero: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Local state for editing
   const [editValues, setEditValues] = useState({
     headline: "",
     subheadline: "",
     text: "",
-    imageUrl: ""
+    imageUrl: "",
   });
 
   useEffect(() => {
@@ -27,7 +27,9 @@ const Hero: React.FC = () => {
     });
 
     // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAdmin(!!session);
     });
 
@@ -37,40 +39,45 @@ const Hero: React.FC = () => {
 
     window.addEventListener("scroll", handleScroll);
     return () => {
-        window.removeEventListener("scroll", handleScroll);
-        subscription.unsubscribe();
+      window.removeEventListener("scroll", handleScroll);
+      subscription.unsubscribe();
     };
   }, []);
 
   // Initialize edit values when enabling edit mode or when config changes
   useEffect(() => {
     if (!isEditing) {
-        setEditValues({
-            headline: config.hero_headline || "ATELIER",
-            subheadline: config.hero_subheadline || "LIGHTING_TECH",
-            text: config.hero_text || "La interfaz definitiva entre la luz y el espacio. Sistemas de iluminación de alta precisión diseñados para el confort visual.",
-            imageUrl: config.hero_image_url || "/images/hero.jpg"
-        });
+      setEditValues({
+        headline: config.hero_headline || "ATELIER",
+        subheadline: config.hero_subheadline || "LIGHTING_TECH",
+        text:
+          config.hero_text ||
+          "La interfaz definitiva entre la luz y el espacio. Sistemas de iluminación de alta precisión diseñados para el confort visual.",
+        imageUrl: config.hero_image_url || "/images/hero.jpg",
+      });
     }
   }, [isEditing, config]);
 
   const handleSave = async () => {
-      // If image changed and old one was from supabase, delete it
-      if (editValues.imageUrl !== config.hero_image_url && config.hero_image_url?.includes("supabase")) {
-        try {
-            await InventoryService.deleteImage(config.hero_image_url);
-        } catch (e) {
-            console.error("Failed to delete old image:", e);
-        }
+    // If image changed and old one was from supabase, delete it
+    if (
+      editValues.imageUrl !== config.hero_image_url &&
+      config.hero_image_url?.includes("supabase")
+    ) {
+      try {
+        await InventoryService.deleteImage(config.hero_image_url);
+      } catch (e) {
+        console.error("Failed to delete old image:", e);
       }
+    }
 
-      await updateLocalConfig({
-          hero_headline: editValues.headline,
-          hero_subheadline: editValues.subheadline,
-          hero_text: editValues.text,
-          hero_image_url: editValues.imageUrl
-      });
-      setIsEditing(false);
+    await updateLocalConfig({
+      hero_headline: editValues.headline,
+      hero_subheadline: editValues.subheadline,
+      hero_text: editValues.text,
+      hero_image_url: editValues.imageUrl,
+    });
+    setIsEditing(false);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,16 +85,16 @@ const Hero: React.FC = () => {
     const file = e.target.files[0];
     setIsUploading(true);
     try {
-        // Convert to WebP
-        const optimizedFile = await optimizeImage(file);
-        
-        const publicUrl = await InventoryService.uploadImage(optimizedFile);
-        setEditValues(prev => ({ ...prev, imageUrl: publicUrl }));
+      // Convert to WebP
+      const optimizedFile = await optimizeImage(file);
+
+      const publicUrl = await InventoryService.uploadImage(optimizedFile);
+      setEditValues((prev) => ({ ...prev, imageUrl: publicUrl }));
     } catch (error) {
-        console.error("Error uploading image:", error);
-        alert("Error uploading image. Make sure you are logged in.");
+      console.error("Error uploading image:", error);
+      alert("Error uploading image. Make sure you are logged in.");
     } finally {
-        setIsUploading(false);
+      setIsUploading(false);
     }
   };
 
@@ -102,59 +109,101 @@ const Hero: React.FC = () => {
       {/* Admin Controls */}
       {isAdmin && (
         <div className="absolute top-24 right-6 z-50 flex gap-2">
-            {!isEditing ? (
-                <button 
-                    onClick={() => setIsEditing(true)}
-                    className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all opacity-0 group-hover/hero:opacity-100"
-                    title="Editar Hero"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                </button>
-            ) : (
-                <>
-                    <input 
-                        type="file" 
-                        ref={fileInputRef} 
-                        onChange={handleImageUpload} 
-                        className="hidden" 
-                        accept="image/*"
+          {!isEditing ? (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="p-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all opacity-0 group-hover/hero:opacity-100"
+              title="Editar Hero"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                />
+              </svg>
+            </button>
+          ) : (
+            <>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                className="hidden"
+                accept="image/*"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className={`p-2 bg-blue-500/80 backdrop-blur-md rounded-full text-white hover:bg-blue-500 transition-all ${isUploading ? "animate-pulse w-auto px-4" : ""}`}
+                title="Cambiar Imagen de Fondo"
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <span className="text-[10px] font-futuristic tracking-wider">
+                    OPTIMIZANDO...
+                  </span>
+                ) : (
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                     />
-                    <button 
-                        onClick={() => fileInputRef.current?.click()}
-                        className={`p-2 bg-blue-500/80 backdrop-blur-md rounded-full text-white hover:bg-blue-500 transition-all ${isUploading ? 'animate-pulse w-auto px-4' : ''}`}
-                        title="Cambiar Imagen de Fondo"
-                        disabled={isUploading}
-                    >
-                        {isUploading ? (
-                           <span className="text-[10px] font-futuristic tracking-wider">OPTIMIZANDO...</span>
-                        ) : (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                        )}
-                    </button>
-                    <button 
-                        onClick={handleSave}
-                        className="p-2 bg-green-500/80 backdrop-blur-md rounded-full text-white hover:bg-green-500 transition-all"
-                        title="Guardar Cambios"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                    </button>
-                     <button 
-                        onClick={() => setIsEditing(false)}
-                        className="p-2 bg-red-500/80 backdrop-blur-md rounded-full text-white hover:bg-red-500 transition-all"
-                         title="Cancelar Edición"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </>
-            )}
+                  </svg>
+                )}
+              </button>
+              <button
+                onClick={handleSave}
+                className="p-2 bg-green-500/80 backdrop-blur-md rounded-full text-white hover:bg-green-500 transition-all"
+                title="Guardar Cambios"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="p-2 bg-red-500/80 backdrop-blur-md rounded-full text-white hover:bg-red-500 transition-all"
+                title="Cancelar Edición"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </>
+          )}
         </div>
       )}
 
@@ -166,7 +215,11 @@ const Hero: React.FC = () => {
         }}
       >
         <img
-          src={isEditing ? editValues.imageUrl : (config.hero_image_url || "/images/hero.jpg")}
+          src={
+            isEditing
+              ? editValues.imageUrl
+              : config.hero_image_url || "/images/hero.jpg"
+          }
           alt="ATELIER Modern Lighting"
           className="w-full h-full object-cover opacity-50 transition-all duration-500" // Removed scale-110 as it is handled by parent style now
         />
@@ -179,42 +232,50 @@ const Hero: React.FC = () => {
       >
         <h1 className="font-futuristic text-6xl md:text-[10rem] font-thin tracking-tighter leading-[0.85] mb-12 flex flex-col items-center">
           {isEditing ? (
-             <input 
-                value={editValues.headline}
-                onChange={e => setEditValues({...editValues, headline: e.target.value})}
-                className="bg-transparent border-b border-white/20 outline-none text-center w-full max-w-3xl focus:border-white transition-colors"
-                autoFocus
-             />
-          ) : (
-             <span>{config.hero_headline || "ATELIER"}</span>
-          )}
-           
-          {isEditing ? (
-            <input 
-                value={editValues.subheadline}
-                onChange={e => setEditValues({...editValues, subheadline: e.target.value})}
-                className="text-4xl md:text-6xl tracking-[0.2em] font-light bg-transparent border-b border-white/20 outline-none text-center w-full max-w-3xl focus:border-white transition-colors mt-4"
+            <input
+              value={editValues.headline}
+              onChange={(e) =>
+                setEditValues({ ...editValues, headline: e.target.value })
+              }
+              className="bg-transparent border-b border-white/20 outline-none text-center w-full max-w-3xl focus:border-white transition-colors"
+              autoFocus
             />
           ) : (
-             <span className="text-4xl md:text-6xl tracking-[0.2em] font-light mt-2 md:mt-0 block">
-                {config.hero_subheadline || "LIGHTING_TECH"}
+            <span>{config.hero_headline || "ATELIER"}</span>
+          )}
+
+          {isEditing ? (
+            <input
+              value={editValues.subheadline}
+              onChange={(e) =>
+                setEditValues({ ...editValues, subheadline: e.target.value })
+              }
+              className="text-4xl md:text-6xl tracking-[0.2em] font-light bg-transparent border-b border-white/20 outline-none text-center w-full max-w-3xl focus:border-white transition-colors mt-4"
+            />
+          ) : (
+            <span className="text-4xl md:text-6xl tracking-[0.2em] font-light mt-2 md:mt-0 block">
+              {config.hero_subheadline || "LIGHTING_TECH"}
             </span>
           )}
         </h1>
-        
+
         {isEditing ? (
-             <RichTextEditor 
-                tagName="p"
-                initialValue={editValues.text}
-                onChange={val => setEditValues({...editValues, text: val})}
-                className="w-full max-w-2xl mx-auto bg-transparent border border-white/20 rounded p-4 outline-none text-neutral-400 font-light text-sm md:text-base tracking-[0.15em] leading-relaxed mb-16 uppercase focus:border-white focus:bg-white/5 h-auto min-h-[8rem]"
-                placeholder="TEXTO PRINCIPAL..."
-             />
+          <RichTextEditor
+            tagName="p"
+            initialValue={editValues.text}
+            onChange={(val) => setEditValues({ ...editValues, text: val })}
+            className="w-full max-w-2xl mx-auto bg-transparent border border-white/20 rounded p-4 outline-none text-neutral-400 font-light text-sm md:text-base tracking-[0.15em] leading-relaxed mb-16 uppercase focus:border-white focus:bg-white/5 h-auto min-h-[8rem]"
+            placeholder="TEXTO PRINCIPAL..."
+          />
         ) : (
-            <p 
-                className="max-w-xl mx-auto text-neutral-400 font-light text-sm md:text-base tracking-[0.15em] leading-relaxed mb-16 uppercase"
-                dangerouslySetInnerHTML={{ __html: config.hero_text || "La interfaz definitiva entre la luz y el espacio. Sistemas de iluminación de alta precisión diseñados para el confort visual." }}
-            />
+          <p
+            className="max-w-xl mx-auto text-neutral-400 font-light text-sm md:text-base tracking-[0.15em] leading-relaxed mb-16 uppercase"
+            dangerouslySetInnerHTML={{
+              __html:
+                config.hero_text ||
+                "La interfaz definitiva entre la luz y el espacio. Sistemas de iluminación de alta precisión diseñados para el confort visual.",
+            }}
+          />
         )}
 
         <div className="flex flex-col md:flex-row items-center justify-center gap-10">

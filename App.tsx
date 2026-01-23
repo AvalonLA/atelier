@@ -13,6 +13,7 @@ declare global {
   }
 }
 
+import { Analytics } from "@vercel/analytics/react";
 import About from "./components/About";
 import AdminPanel from "./components/AdminPanel";
 import Checkout from "./components/Checkout";
@@ -23,7 +24,6 @@ import Footer from "./components/Footer";
 import ProductView from "./components/ProductView";
 import VisionSection from "./components/VisionSection";
 import { Product } from "./types";
-import { Analytics } from "@vercel/analytics/react";
 
 const AppContent: React.FC = () => {
   useEffect(() => {

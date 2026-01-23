@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useConfig } from "../context/ConfigContext";
 import { InventoryService, supabase } from "../services/supabase";
-import RichTextEditor from "./ui/RichTextEditor";
 import { optimizeImage } from "../utils/imageOptimizer";
+import RichTextEditor from "./ui/RichTextEditor";
 
 const VisionSection: React.FC = () => {
   const { config, updateLocalConfig } = useConfig();
@@ -217,13 +217,15 @@ const VisionSection: React.FC = () => {
 
       <div className="relative z-10 text-center max-w-4xl px-6">
         {isEditing ? (
-             <RichTextEditor
-                tagName="h2"
-                initialValue={editValues.text}
-                onChange={(val: string) => setEditValues({ ...editValues, text: val })}
-                className="w-full bg-transparent border border-white/20 rounded p-4 outline-none text-3xl md:text-6xl font-extralight tracking-tight mb-16 italic opacity-80 uppercase leading-tight focus:border-white focus:bg-white/5 h-auto min-h-[10rem] text-center"
-                placeholder="Texto visión..."
-             />
+          <RichTextEditor
+            tagName="h2"
+            initialValue={editValues.text}
+            onChange={(val: string) =>
+              setEditValues({ ...editValues, text: val })
+            }
+            className="w-full bg-transparent border border-white/20 rounded p-4 outline-none text-3xl md:text-6xl font-extralight tracking-tight mb-16 italic opacity-80 uppercase leading-tight focus:border-white focus:bg-white/5 h-auto min-h-[10rem] text-center"
+            placeholder="Texto visión..."
+          />
         ) : (
           <h2
             className="text-3xl md:text-6xl font-extralight tracking-tight mb-16 italic opacity-60 uppercase leading-tight"
