@@ -4,6 +4,7 @@ import { Product } from "../types";
 import { useProducts } from "../hooks/useProducts";
 import { TableRowSkeleton } from "./ui/AdminSkeletons";
 import { useConfig } from "../context/ConfigContext";
+import { useCart } from "../context/CartContext";
 import { supabase } from "../services/supabase";
 
 const ExpandingGridRow: React.FC<{
@@ -11,6 +12,12 @@ const ExpandingGridRow: React.FC<{
   onSelectProduct: (p: Product) => void;
 }> = ({ products, onSelectProduct }) => {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const { addItem } = useCart();
+
+  const handleAddToCart = (e: React.MouseEvent, p: Product) => {
+    e.stopPropagation();
+    addItem(p);
+  };
 
   return (
     <div 
@@ -22,7 +29,7 @@ const ExpandingGridRow: React.FC<{
           key={p.id}
           onClick={() => onSelectProduct(p)}
           onMouseEnter={() => setExpandedIndex(i)}
-          className={`group relative ${expandedIndex === i ? "flex-[3]" : "flex-[1]"} transition-all duration-500 ease-in-out overflow-hidden border-r last:border-0 border-white/10 cursor-pointer`}
+          className={`group relative ${expandedIndex === i ? "flex-[3]" : "flex-[1]"} min-w-0 h-full transition-all duration-500 ease-in-out overflow-hidden border-r last:border-0 border-white/10 cursor-pointer`}
         >
           <img
             src={p.image}
@@ -31,7 +38,18 @@ const ExpandingGridRow: React.FC<{
           />
           <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors" />
 
-          <div className="absolute inset-0 flex flex-col justify-end p-8 lg:p-12 text-white">
+          {/* Add to Cart Button on Hover */}
+           <button
+            onClick={(e) => handleAddToCart(e, p)}
+            className="absolute top-8 right-8 z-20 w-10 h-10 border border-white/30 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-white hover:text-black hover:scale-110"
+            title="Agregar al Carrito"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+
+          <div className="absolute inset-0 flex flex-col justify-end p-8 lg:p-12 text-white pointer-events-none">
             <div className="pb-12">
               <p className="font-futuristic text-[10px] lg:text-xs uppercase tracking-[0.4em] font-bold mb-4 transform translate-y-8 group-hover:translate-y-0 transition-transform duration-500 delay-75">
                 {p.tag}
@@ -66,14 +84,22 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
   const { products: allProducts, loading } = useProducts();
   const { config, updateLocalConfig } = useConfig();
   const [filter, setFilter] = useState<string>("all");
+  const [showFilters, setShowFilters] = useState(false);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [editValues, setEditValues] = useState({
       headline: "",
-      subheadline: ""
+      subheadline: "",
+      // Collection Hero Specific
+      collectionHeadline: "",
+      collectionSubheadline: "",
+      collectionImage: ""
   });
 
   useEffect(() => {
@@ -84,17 +110,16 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
 
   useEffect(() => {
       if (!isEditing) {
-        if (showAll) {
-            setEditValues({
-                headline: config.catalog_headline_full || "SISTEMAS ATELIER.",
-                subheadline: config.catalog_description_full || "FILTROS_TÉCNICOS"
-            });
-        } else {
-            setEditValues({
-                headline: config.catalog_headline || "DISEÑO EXPANSIVO.",
-                subheadline: config.catalog_description || "LA COLECCIÓN"
-            });
-        }
+        setEditValues({
+             // Main section defaults
+             headline: showAll ? (config.catalog_headline_full || "SISTEMAS ATELIER.") : (config.catalog_headline || "DISEÑO EXPANSIVO."),
+             subheadline: showAll ? (config.catalog_description_full || "FILTROS_TÉCNICOS") : (config.catalog_description || "LA COLECCIÓN"),
+             
+             // Collection Hero Defaults
+             collectionHeadline: config.collection_hero_headline || "CATÁLOGO <br/> <span class='italic opacity-30 text-white'>EXTENDIDO.</span>",
+             collectionSubheadline: config.collection_hero_subheadline || "ENGINEERED FOR MODERN SPACES",
+             collectionImage: config.collection_hero_image_url || "/images/pexels-photo-276528.webp"
+        });
       }
   }, [isEditing, showAll, config]);
 
@@ -102,7 +127,10 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
     if (showAll) {
         await updateLocalConfig({
             catalog_headline_full: editValues.headline,
-            catalog_description_full: editValues.subheadline
+            catalog_description_full: editValues.subheadline,
+            collection_hero_headline: editValues.collectionHeadline,
+            collection_hero_subheadline: editValues.collectionSubheadline,
+            collection_hero_image_url: editValues.collectionImage
         });
     } else {
         await updateLocalConfig({
@@ -111,6 +139,20 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
         });
     }
     setIsEditing(false);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files || e.target.files.length === 0) return;
+      setIsUploading(true);
+      try {
+          const url = await import("../services/supabase").then(m => m.InventoryService.uploadImage(e.target.files![0]));
+          setEditValues(prev => ({ ...prev, collectionImage: url }));
+      } catch (e) {
+          console.error(e);
+          alert("Error uploading image");
+      } finally {
+          setIsUploading(false);
+      }
   };
 
   useEffect(() => {
@@ -156,10 +198,10 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
 
   const filters = [
     { id: "all", label: "TODOS" },
-    { id: "pendant", label: "COLGANTES" },
     { id: "floor", label: "DE PIE" },
     { id: "table", label: "DE MESA" },
     { id: "tech", label: "SMART" },
+    { id: "pendant", label: "COLGANTES" },
   ];
 
   if (loading) {
@@ -216,21 +258,57 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
       )}
 
       {showAll && (
-        <div className="relative h-[60vh] flex items-center justify-center overflow-hidden mb-24">
+        <div className="relative h-[60vh] flex items-center justify-center overflow-hidden mb-24 group/hero">
+           {isEditing && (
+              <div className="absolute top-4 left-4 z-50 flex gap-2">
+                 <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleImageUpload} 
+                    className="hidden" 
+                    accept="image/*"
+                 />
+                 <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`px-4 py-2 bg-blue-500/80 backdrop-blur-md rounded text-white text-[10px] tracking-widest hover:bg-blue-500 transition-all ${isUploading ? 'animate-pulse' : ''}`}
+                 >
+                    {isUploading ? "SUBIENDO..." : "CAMBIAR IMAGEN"}
+                 </button>
+              </div>
+           )}
+
           <img
-            src="/images/pexels-photo-276528.webp"
+            src={isEditing ? editValues.collectionImage : (config.collection_hero_image_url || "/images/pexels-photo-276528.webp")}
             alt="Collection Hero"
             className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale"
           />
           <div className="absolute inset-0 bg-black/60"></div>
           <div className="relative z-10 text-center space-y-4">
-            <h1 className="font-futuristic text-5xl md:text-8xl tracking-tighter uppercase font-thin">
-              CATÁLOGO <br />
-              <span className="italic opacity-30 text-white">EXTENDIDO.</span>
-            </h1>
-            <p className="font-futuristic text-[10px] tracking-[0.6em] text-neutral-500">
-              ENGINEERED FOR MODERN SPACES
-            </p>
+            {isEditing ? (
+                 <div className="flex flex-col items-center gap-4">
+                    <textarea 
+                        value={editValues.collectionHeadline}
+                        onChange={e => setEditValues({...editValues, collectionHeadline: e.target.value})}
+                        className="font-futuristic text-5xl md:text-8xl tracking-tighter uppercase font-thin bg-transparent border border-white/20 text-center w-[80vw] h-48 focus:border-white focus:outline-none p-4"
+                    />
+                     <input 
+                        value={editValues.collectionSubheadline}
+                        onChange={e => setEditValues({...editValues, collectionSubheadline: e.target.value})}
+                        className="font-futuristic text-[10px] tracking-[0.6em] text-neutral-500 bg-transparent border-b border-white/20 w-fit text-center focus:border-white focus:outline-none pb-2"
+                    />
+                 </div>
+            ) : (
+                <>
+                    <h1 
+                        className="font-futuristic text-5xl md:text-8xl tracking-tighter uppercase font-thin"
+                        dangerouslySetInnerHTML={{ __html: config.collection_hero_headline || "CATÁLOGO <br/> <span class='italic opacity-30 text-white'>EXTENDIDO.</span>" }}
+                    >
+                    </h1>
+                    <p className="font-futuristic text-[10px] tracking-[0.6em] text-neutral-500">
+                    {config.collection_hero_subheadline || "ENGINEERED FOR MODERN SPACES"}
+                    </p>
+                </>
+            )}
           </div>
         </div>
       )}
@@ -262,24 +340,45 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
             </h2>
 
             {showAll && (
-              <div className="flex flex-wrap gap-4 md:gap-12 relative z-[200]">
-                {filters.map((f) => (
-                  <button
-                    key={f.id}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setFilter(f.id);
-                    }}
-                    className={`relative z-[300] font-futuristic text-[11px] tracking-widest transition-all duration-300 cursor-pointer outline-none select-none px-4 py-3 bg-transparent md:bg-black/40 ${
-                      filter === f.id
-                        ? "text-white tracking-[0.25em] border-b border-white"
-                        : "text-[#a3a3a3] hover:text-white hover:tracking-[0.25em] border-b border-transparent hover:border-white/20"
-                    }`}
-                  >
-                    {f.label}
-                  </button>
-                ))}
+              <div className="flex flex-col gap-8 relative z-[200]">
+                 <div>
+                    <button 
+                        onClick={() => setShowFilters(!showFilters)}
+                        className="font-futuristic text-xs tracking-[0.2em] border-b border-white/30 text-white/50 hover:text-white hover:border-white transition-all pb-1 uppercase"
+                    >
+                        {showFilters ? "- OCULTAR FILTROS" : "+ MOSTRAR FILTROS"}
+                    </button>
+                 </div>
+
+                 {showFilters && (
+                    <div className="animate-in slide-in-from-left-4 fade-in duration-500">
+                        <div className="flex flex-wrap gap-4 md:gap-12 mb-8">
+                            {filters.map((f) => (
+                            <button
+                                key={f.id}
+                                onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setFilter(f.id);
+                                }}
+                                className={`relative z-[300] font-futuristic text-[11px] tracking-widest transition-all duration-300 cursor-pointer outline-none select-none px-4 py-3 bg-transparent md:bg-black/40 ${
+                                filter === f.id
+                                    ? "text-white tracking-[0.25em] border-b border-white"
+                                    : "text-[#a3a3a3] hover:text-white hover:tracking-[0.25em] border-b border-transparent hover:border-white/20"
+                                }`}
+                            >
+                                {f.label}
+                            </button>
+                            ))}
+                        </div>
+                        
+                        <div>
+                             <button className="font-futuristic text-[10px] tracking-[0.2em] bg-white/5 px-6 py-2 text-neutral-400 hover:text-white hover:bg-white/10 transition-colors uppercase">
+                                 FILTROS AVANZADOS +
+                             </button>
+                        </div>
+                    </div>
+                 )}
               </div>
             )}
           </div>

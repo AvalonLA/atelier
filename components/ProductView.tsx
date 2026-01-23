@@ -223,14 +223,60 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
         </span>
       </nav>
 
-      <section className="relative h-[90vh] flex items-end p-8 md:p-20 overflow-hidden">
+      <section className="relative h-[90vh] flex items-end p-8 md:p-20 overflow-hidden group/hero">
         <img
-          src={product.image}
+          key={galleryIndex}
+          src={allImages[galleryIndex]}
           alt={product.name}
-          className="absolute inset-0 w-full h-full object-cover scale-105 cursor-zoom-in"
-          onClick={() => setFullscreenImage(product.image)}
+          className="absolute inset-0 w-full h-full object-cover scale-105 cursor-zoom-in animate-in fade-in duration-500"
+          onClick={() => setFullscreenImage(allImages[galleryIndex])}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+        
+        {/* Navigation Arrows & Counter */}
+        {allImages.length > 1 && (
+          <div className="absolute inset-x-8 md:inset-x-12 top-1/2 -translate-y-1/2 flex justify-between items-center z-20 pointer-events-none">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setGalleryIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
+              }}
+              className="pointer-events-auto p-4 rounded-full bg-white/5 backdrop-blur-md text-white hover:bg-white/20 transition-all opacity-0 group-hover/hero:opacity-100"
+              title="Anterior"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setGalleryIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
+              }}
+              className="pointer-events-auto p-4 rounded-full bg-white/5 backdrop-blur-md text-white hover:bg-white/20 transition-all opacity-0 group-hover/hero:opacity-100"
+              title="Siguiente"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Image Counter */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none opacity-0 group-hover/hero:opacity-100 transition-opacity duration-300">
+           {allImages.length > 1 && (
+             <div className="bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                <span className="font-futuristic text-[10px] tracking-[0.3em] text-white">
+                  {galleryIndex + 1}/{allImages.length}
+                </span>
+             </div>
+           )}
+        </div>
+
         <div className="relative z-10 w-full">
           <h1 className="font-futuristic text-5xl md:text-[10rem] leading-[0.85] tracking-tighter mb-8 font-extralight uppercase pointer-events-none">
             {product.name.split(" ").map((word, i) => (

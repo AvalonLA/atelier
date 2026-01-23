@@ -168,12 +168,17 @@ export const OrderService = {
     if (orderError) throw orderError;
 
     // 2. Create Sale Items
-    const saleItems = items.map(item => ({
-      order_id: orderData.id,
-      product_id: item.id,
-      quantity: item.quantity,
-      price: item.price || (item.category === "tech" ? 999 : 399) // Fallback price
-    }));
+    const saleItems = items.map(item => {
+      // Validate if item.id is a UUID. If not, send null.
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id);
+      
+      return {
+        order_id: orderData.id,
+        product_id: isUuid ? item.id : null, 
+        quantity: item.quantity,
+        price: item.price || (item.category === "tech" ? 999 : 399)
+      };
+    });
 
     const { error: itemsError } = await supabase
       .from("sale_items")

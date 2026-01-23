@@ -26,6 +26,9 @@ create table public.config (
   catalog_description text,
   catalog_headline_full text,
   catalog_description_full text,
+  collection_hero_headline text,
+  collection_hero_subheadline text,
+  collection_hero_image_url text,
 
   -- Contact Section
   contact_headline text,

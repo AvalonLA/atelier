@@ -59,6 +59,9 @@ const defaultConfig: AppConfig = {
   catalog_description: "LA COLECCIÓN",
   catalog_headline_full: "SISTEMAS ATELIER.",
   catalog_description_full: "FILTROS_TÉCNICOS",
+  collection_hero_headline: "CATÁLOGO <br/> <span class='italic opacity-30 text-white'>EXTENDIDO.</span>",
+  collection_hero_subheadline: "ENGINEERED FOR MODERN SPACES",
+  collection_hero_image_url: "/images/pexels-photo-276528.webp",
   contact_headline: "UBICACIÓN_FLAGSHIP",
   contact_subheadline:
     "ESTAMOS EN <br/> <span class='opacity-40 italic'>EL CENTRO.</span>",

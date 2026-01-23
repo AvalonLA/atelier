@@ -66,6 +66,9 @@ export interface AppConfig {
   catalog_description?: string;
   catalog_headline_full?: string;
   catalog_description_full?: string;
+  collection_hero_headline?: string;
+  collection_hero_subheadline?: string;
+  collection_hero_image_url?: string;
   contact_headline?: string;
   contact_subheadline?: string;
   contact_address?: string;

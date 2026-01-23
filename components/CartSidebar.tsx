@@ -111,7 +111,8 @@ const CartSidebar: React.FC<{ onCheckout?: () => void }> = ({ onCheckout }) => {
                     </h4>
                     <button
                       onClick={() => updateQuantity(item.id, 0)}
-                      className="text-neutral-400 hover:text-red-500 transition-colors"
+                      className="text-neutral-400 hover:text-red-500 transition-colors p-1"
+                      title="Eliminar producto"
                     >
                       <svg
                         className="w-4 h-4"
@@ -119,12 +120,7 @@ const CartSidebar: React.FC<{ onCheckout?: () => void }> = ({ onCheckout }) => {
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="1"
-                          d="M6 18L18 6M6 6l12 12"
-                        />
+                         <path d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                   </div>
