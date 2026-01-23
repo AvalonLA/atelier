@@ -62,9 +62,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
       fetchCounts();
 
-      // Subscribe to changes in Orders and Consultations tables
-      const ordersSubscription = supabase
-        .channel("admin_orders_counts")
+      // Subscribe to changes in Orders, Consultations and Products tables
+      const channel = supabase
+        .channel("admin_global_updates")
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "orders" },
@@ -72,10 +72,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             fetchCounts();
           },
         )
-        .subscribe();
-
-      const consultationsSubscription = supabase
-        .channel("admin_consultations_counts")
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "consultations" },
@@ -83,10 +79,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             fetchCounts();
           },
         )
-        .subscribe();
-
-      const productsSubscription = supabase
-        .channel("admin_products_counts")
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "products" },
@@ -97,9 +89,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         .subscribe();
 
       return () => {
-        supabase.removeChannel(ordersSubscription);
-        supabase.removeChannel(consultationsSubscription);
-        supabase.removeChannel(productsSubscription);
+        supabase.removeChannel(channel);
       };
     }
   }, [isAuthenticated]);
