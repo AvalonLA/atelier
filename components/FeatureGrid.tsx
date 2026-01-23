@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 // import { allProducts } from "../data/products"; // REMOVED: Using hook
-import { useCart } from "../context/CartContext";
 import { toast } from "sonner";
+import { useCart } from "../context/CartContext";
 import { useConfig } from "../context/ConfigContext";
 import { useProducts } from "../hooks/useProducts";
 import { supabase } from "../services/supabase";
@@ -280,9 +280,9 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
 
   const displayedProducts = useMemo(() => {
     if (showAll) return filteredProducts;
-    
+
     // Landing Page: Show Featured Products
-    const featured = allProducts.filter(p => p.featured);
+    const featured = allProducts.filter((p) => p.featured);
     return featured.length > 0 ? featured.slice(0, 4) : allProducts.slice(0, 4);
   }, [showAll, filteredProducts, allProducts]);
 

@@ -8,7 +8,7 @@ export const AdminConsultations: React.FC = () => {
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // Modal States
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -35,7 +35,7 @@ export const AdminConsultations: React.FC = () => {
     return consultations.filter(
       (c) =>
         c.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.query.toLowerCase().includes(searchTerm.toLowerCase())
+        c.query.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [consultations, searchTerm]);
 
@@ -61,286 +61,376 @@ export const AdminConsultations: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const handleStatusUpdate = async (id: string, newStatus: "pending" | "responded") => {
+  const handleStatusUpdate = async (
+    id: string,
+    newStatus: "pending" | "responded",
+  ) => {
     // Optimistic Update
-    setConsultations(prev => prev.map(c => c.id === id ? { ...c, status: newStatus} : c)); 
+    setConsultations((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c)),
+    );
     try {
-        await ConsultationService.updateStatus(id, newStatus);
+      await ConsultationService.updateStatus(id, newStatus);
     } catch (e) {
-        console.error("Error updating status:", e);
-        // Revert on error could be added here
+      console.error("Error updating status:", e);
+      // Revert on error could be added here
     }
   };
 
   const handleSave = async (item: Partial<Consultation>) => {
     try {
-        if (item.id && !item.id.startsWith("NEW_")) {
-          // Edit
-           await ConsultationService.updateStatus(item.id, item.status || "pending");
-           // Assuming updateConsultation exists or we just updating status for now? 
-           // The prompt implies editing properly. But Service currently only has updateStatus.
-           // Ideally we should update more fields, but sticking to previous logic + status for now.
-           // If updateConsultation doesn't exist in service, we might need to add it or just accept status/mock update.
-           // Given the prompt "se pueda editar", I'll assume standard update behavior visually at least.
-           setConsultations(prev => prev.map(c => c.id === item.id ? { ...c, ...item } as Consultation : c));
-        } else {
-            // Create
-            const { id, ...data} = item;
-            // Ensure status is pending if not set
-            const newItemData = { ...data, status: data.status || "pending" };
-            const newItem = await ConsultationService.addConsultation(newItemData);
-            setConsultations(prev => [newItem, ...prev]);
-        }
-        setIsFormOpen(false);
-        setEditingItem(null);
-        toast.success("CONSULTA GUARDADA");
+      if (item.id && !item.id.startsWith("NEW_")) {
+        // Edit
+        await ConsultationService.updateStatus(
+          item.id,
+          item.status || "pending",
+        );
+        // Assuming updateConsultation exists or we just updating status for now?
+        // The prompt implies editing properly. But Service currently only has updateStatus.
+        // Ideally we should update more fields, but sticking to previous logic + status for now.
+        // If updateConsultation doesn't exist in service, we might need to add it or just accept status/mock update.
+        // Given the prompt "se pueda editar", I'll assume standard update behavior visually at least.
+        setConsultations((prev) =>
+          prev.map((c) =>
+            c.id === item.id ? ({ ...c, ...item } as Consultation) : c,
+          ),
+        );
+      } else {
+        // Create
+        const { id, ...data } = item;
+        // Ensure status is pending if not set
+        const newItemData = { ...data, status: data.status || "pending" };
+        const newItem = await ConsultationService.addConsultation(newItemData);
+        setConsultations((prev) => [newItem, ...prev]);
+      }
+      setIsFormOpen(false);
+      setEditingItem(null);
+      toast.success("CONSULTA GUARDADA");
     } catch (e) {
-        console.error(e);
-        toast.error("ERROR AL GUARDAR");
+      console.error(e);
+      toast.error("ERROR AL GUARDAR");
     }
   };
 
   return (
     <>
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-light dark:text-white text-black">
-            CONSULTAS
-          </h2>
-          <p className="text-xs font-futuristic tracking-[0.2em] text-neutral-500 uppercase mt-1">
-            Gestión de Queries
-          </p>
+      <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-light dark:text-white text-black">
+              CONSULTAS
+            </h2>
+            <p className="text-xs font-futuristic tracking-[0.2em] text-neutral-500 uppercase mt-1">
+              Gestión de Queries
+            </p>
+          </div>
+          <div className="flex gap-4 w-full md:w-auto">
+            <input
+              type="text"
+              placeholder="Buscar..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 px-4 py-2 text-sm outline-none focus:border-neutral-500 w-full md:w-64 transition-colors"
+            />
+            <button
+              onClick={() => {
+                setEditingItem(null);
+                setIsFormOpen(true);
+              }}
+              className="bg-black dark:bg-white text-white dark:text-black px-6 py-2 text-[10px] font-futuristic tracking-widest hover:opacity-80 transition-opacity whitespace-nowrap"
+            >
+              + NUEVA
+            </button>
+          </div>
         </div>
-        <div className="flex gap-4 w-full md:w-auto">
-          <input
-            type="text"
-            placeholder="Buscar..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 px-4 py-2 text-sm outline-none focus:border-neutral-500 w-full md:w-64 transition-colors"
-          />
-           <button
-            onClick={() => {
-              setEditingItem(null);
-              setIsFormOpen(true);
-            }}
-            className="bg-black dark:bg-white text-white dark:text-black px-6 py-2 text-[10px] font-futuristic tracking-widest hover:opacity-80 transition-opacity whitespace-nowrap"
-          >
-            + NUEVA
-          </button>
+
+        <div className="overflow-x-auto border border-neutral-200 dark:border-neutral-800 rounded-lg">
+          <table className="w-full text-left">
+            <thead className="bg-neutral-50 dark:bg-neutral-900 text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase border-b border-neutral-200 dark:border-neutral-800">
+              <tr>
+                <th className="px-6 py-4">Cliente</th>
+                <th className="px-6 py-4">Producto</th>
+                <th className="px-6 py-4">Consulta</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800 dark:text-gray-300 text-gray-800">
+              {isLoading ? (
+                [...Array(3)].map((_, i) => <TableRowSkeleton key={i} />)
+              ) : filteredConsultations.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-24 text-center">
+                    <div className="flex flex-col items-center justify-center opacity-30 gap-4">
+                      <p className="font-futuristic text-[10px] tracking-widest uppercase">
+                        Sin Consultas
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredConsultations.map((c) => (
+                  <tr
+                    key={c.id}
+                    className="group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
+                  >
+                    <td className="px-6 py-4 text-sm font-medium">
+                      {c.customerName}
+                    </td>
+                    <td className="px-6 py-4 text-xs font-futuristic tracking-wider text-neutral-500">
+                      {c.productName || "-"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-400 max-w-xs truncate">
+                      {c.query}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        onClick={() =>
+                          handleStatusUpdate(
+                            c.id,
+                            c.status === "pending" ? "responded" : "pending",
+                          )
+                        }
+                        className={`px-2 py-1 text-[9px] font-futuristic uppercase tracking-wider rounded cursor-pointer select-none border ${
+                          c.status === "responded"
+                            ? "bg-green-100/10 text-green-600 border-green-200/20"
+                            : "bg-yellow-100/10 text-yellow-600 border-yellow-200/20"
+                        }`}
+                      >
+                        {c.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2 transition-opacity">
+                        <button
+                          onClick={() => handleEdit(c)}
+                          className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded text-neutral-500 hover:text-black dark:hover:text-white transition-colors"
+                          title="Editar"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                            />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => confirmDelete(c.id)}
+                          className="p-2 hover:bg-red-500/10 rounded text-red-500 transition-colors"
+                          title="Eliminar"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
-       <div className="overflow-x-auto border border-neutral-200 dark:border-neutral-800 rounded-lg">
-        <table className="w-full text-left">
-          <thead className="bg-neutral-50 dark:bg-neutral-900 text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase border-b border-neutral-200 dark:border-neutral-800">
-            <tr>
-              <th className="px-6 py-4">Cliente</th>
-              <th className="px-6 py-4">Producto</th>
-              <th className="px-6 py-4">Consulta</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800 dark:text-gray-300 text-gray-800">
-            {isLoading ? (
-               [...Array(3)].map((_, i) => <TableRowSkeleton key={i} />)
-            ) : filteredConsultations.length === 0 ? (
-               <tr>
-                <td colSpan={5} className="py-24 text-center">
-                  <div className="flex flex-col items-center justify-center opacity-30 gap-4">
-                     <p className="font-futuristic text-[10px] tracking-widest uppercase">Sin Consultas</p>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-                filteredConsultations.map((c) => (
-                    <tr key={c.id} className="group hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors">
-                        <td className="px-6 py-4 text-sm font-medium">{c.customerName}</td>
-                        <td className="px-6 py-4 text-xs font-futuristic tracking-wider text-neutral-500">{c.productName || "-"}</td>
-                        <td className="px-6 py-4 text-sm text-neutral-600 dark:text-neutral-400 max-w-xs truncate">{c.query}</td>
-                        <td className="px-6 py-4">
-                            <span 
-                                onClick={() => handleStatusUpdate(c.id, c.status === "pending" ? "responded" : "pending")}
-                                className={`px-2 py-1 text-[9px] font-futuristic uppercase tracking-wider rounded cursor-pointer select-none border ${
-                                c.status === "responded" 
-                                    ? "bg-green-100/10 text-green-600 border-green-200/20" 
-                                    : "bg-yellow-100/10 text-yellow-600 border-yellow-200/20"
-                                }`}
-                            >
-                                {c.status}
-                            </span>
-                        </td>
-                         <td className="px-6 py-4 text-right">
-                            <div className="flex justify-end gap-2 transition-opacity">
-                                <button
-                                    onClick={() => handleEdit(c)}
-                                    className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded text-neutral-500 hover:text-black dark:hover:text-white transition-colors"
-                                    title="Editar"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                    </svg>
-                                </button>
-                                <button
-                                    onClick={() => confirmDelete(c.id)}
-                                    className="p-2 hover:bg-red-500/10 rounded text-red-500 transition-colors"
-                                    title="Eliminar"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
-                            </div>
-                         </td>
-                    </tr>
-                ))
-            )}
-            </tbody>
-        </table>
-       </div>
-    </div>
-       
-       {isFormOpen && (
-           <ConsultationForm 
-             item={editingItem}
-             onClose={() => { setIsFormOpen(false); setEditingItem(null); }}
-             onSave={handleSave}
-           />
-       )}
+      {isFormOpen && (
+        <ConsultationForm
+          item={editingItem}
+          onClose={() => {
+            setIsFormOpen(false);
+            setEditingItem(null);
+          }}
+          onSave={handleSave}
+        />
+      )}
 
-       {isDeleteModalOpen && (
-           <ConfirmationModal
-                title="ELIMINAR CONSULTA"
-                message="¿Está seguro que desea eliminar este registro? Esta acción es irreversible."
-                onConfirm={handleDelete}
-                onCancel={() => { setIsDeleteModalOpen(false); setItemToDelete(null); }}
-           />
-       )}
+      {isDeleteModalOpen && (
+        <ConfirmationModal
+          title="ELIMINAR CONSULTA"
+          message="¿Está seguro que desea eliminar este registro? Esta acción es irreversible."
+          onConfirm={handleDelete}
+          onCancel={() => {
+            setIsDeleteModalOpen(false);
+            setItemToDelete(null);
+          }}
+        />
+      )}
     </>
   );
 };
 
 interface ConsultationFormProps {
-    item: Consultation | null;
-    onClose: () => void;
-    onSave: (item: Partial<Consultation>) => Promise<void>;
+  item: Consultation | null;
+  onClose: () => void;
+  onSave: (item: Partial<Consultation>) => Promise<void>;
 }
 
-const ConsultationForm: React.FC<ConsultationFormProps> = ({ item, onClose, onSave }) => {
-    const [formData, setFormData] = useState<Partial<Consultation>>(item || {
-        customerName: "",
-        productName: "",
-        query: "",
-        status: "pending"
-    });
+const ConsultationForm: React.FC<ConsultationFormProps> = ({
+  item,
+  onClose,
+  onSave,
+}) => {
+  const [formData, setFormData] = useState<Partial<Consultation>>(
+    item || {
+      customerName: "",
+      productName: "",
+      query: "",
+      status: "pending",
+    },
+  );
 
-    return (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 animate-in fade-in duration-200">
-             <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={onClose} />
-             <div className="bg-white dark:bg-[#0A0A0A] w-full max-w-lg p-8 border border-neutral-200 dark:border-neutral-800 shadow-2xl relative z-10">
-                <h3 className="font-futuristic text-lg tracking-[0.2em] mb-8 uppercase dark:text-white text-black border-b border-neutral-100 dark:border-neutral-900 pb-4">
-                     {item ? "EDITAR CONSULTA" : "NUEVA CONSULTA"}
-                </h3>
-                
-                <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                             <label className="text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase">Cliente</label>
-                             <input 
-                                placeholder="NOMBRE"
-                                className="w-full bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 text-sm focus:border-black dark:focus:border-white outline-none transition-colors"
-                                value={formData.customerName}
-                                onChange={e => setFormData({...formData, customerName: e.target.value})}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                             <label className="text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase">Estado</label>
-                             <select
-                                className="w-full bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 text-sm focus:border-black dark:focus:border-white outline-none transition-colors appearance-none"
-                                value={formData.status}
-                                onChange={e => setFormData({...formData, status: e.target.value as "pending" | "responded"})}
-                             >
-                                 <option value="pending">PENDIENTE</option>
-                                 <option value="responded">RESPONDIDO</option>
-                             </select>
-                        </div>
-                    </div>
+  return (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div
+        className="absolute inset-0 bg-black/90 backdrop-blur-md"
+        onClick={onClose}
+      />
+      <div className="bg-white dark:bg-[#0A0A0A] w-full max-w-lg p-8 border border-neutral-200 dark:border-neutral-800 shadow-2xl relative z-10">
+        <h3 className="font-futuristic text-lg tracking-[0.2em] mb-8 uppercase dark:text-white text-black border-b border-neutral-100 dark:border-neutral-900 pb-4">
+          {item ? "EDITAR CONSULTA" : "NUEVA CONSULTA"}
+        </h3>
 
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase">Producto Relacionado</label>
-                        <input 
-                            placeholder="MODELO / REFERENCIA"
-                            className="w-full bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 text-sm focus:border-black dark:focus:border-white outline-none transition-colors"
-                            value={formData.productName}
-                            onChange={e => setFormData({...formData, productName: e.target.value})}
-                        />
-                    </div>
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase">
+                Cliente
+              </label>
+              <input
+                placeholder="NOMBRE"
+                className="w-full bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 text-sm focus:border-black dark:focus:border-white outline-none transition-colors"
+                value={formData.customerName}
+                onChange={(e) =>
+                  setFormData({ ...formData, customerName: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase">
+                Estado
+              </label>
+              <select
+                className="w-full bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 text-sm focus:border-black dark:focus:border-white outline-none transition-colors appearance-none"
+                value={formData.status}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    status: e.target.value as "pending" | "responded",
+                  })
+                }
+              >
+                <option value="pending">PENDIENTE</option>
+                <option value="responded">RESPONDIDO</option>
+              </select>
+            </div>
+          </div>
 
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase">Consulta</label>
-                        <textarea 
-                            placeholder="DETALLE DE LA CONSULTA..."
-                            className="w-full bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 text-sm focus:border-black dark:focus:border-white outline-none transition-colors min-h-[120px] resize-none"
-                            value={formData.query}
-                            onChange={e => setFormData({...formData, query: e.target.value})}
-                        />
-                    </div>
-                </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase">
+              Producto Relacionado
+            </label>
+            <input
+              placeholder="MODELO / REFERENCIA"
+              className="w-full bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 text-sm focus:border-black dark:focus:border-white outline-none transition-colors"
+              value={formData.productName}
+              onChange={(e) =>
+                setFormData({ ...formData, productName: e.target.value })
+              }
+            />
+          </div>
 
-                <div className="flex gap-4 justify-end mt-8 pt-4 border-t border-neutral-100 dark:border-neutral-900">
-                     <button 
-                        onClick={onClose} 
-                        className="px-6 py-3 text-[10px] font-futuristic tracking-widest text-neutral-500 hover:text-black dark:hover:text-white transition-colors"
-                    >
-                        CANCELAR
-                     </button>
-                     <button 
-                        onClick={() => onSave(formData)} 
-                        className="px-8 py-3 text-[10px] font-futuristic tracking-widest bg-black dark:bg-white text-white dark:text-black hover:opacity-80 transition-opacity"
-                    >
-                        GUARDAR
-                     </button>
-                </div>
-             </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-futuristic tracking-widest text-neutral-500 uppercase">
+              Consulta
+            </label>
+            <textarea
+              placeholder="DETALLE DE LA CONSULTA..."
+              className="w-full bg-neutral-50 dark:bg-black border border-neutral-200 dark:border-white/10 p-3 text-sm focus:border-black dark:focus:border-white outline-none transition-colors min-h-[120px] resize-none"
+              value={formData.query}
+              onChange={(e) =>
+                setFormData({ ...formData, query: e.target.value })
+              }
+            />
+          </div>
         </div>
-    );
+
+        <div className="flex gap-4 justify-end mt-8 pt-4 border-t border-neutral-100 dark:border-neutral-900">
+          <button
+            onClick={onClose}
+            className="px-6 py-3 text-[10px] font-futuristic tracking-widest text-neutral-500 hover:text-black dark:hover:text-white transition-colors"
+          >
+            CANCELAR
+          </button>
+          <button
+            onClick={() => onSave(formData)}
+            className="px-8 py-3 text-[10px] font-futuristic tracking-widest bg-black dark:bg-white text-white dark:text-black hover:opacity-80 transition-opacity"
+          >
+            GUARDAR
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 interface ConfirmationModalProps {
-    title: string;
-    message: string;
-    onConfirm: () => void;
-    onCancel: () => void;
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
 }
 
-const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ title, message, onConfirm, onCancel }) => {
-    return (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={onCancel} />
-            <div className="bg-white dark:bg-[#0A0A0A] w-full max-w-md p-8 border border-neutral-200 dark:border-neutral-800 shadow-2xl relative z-10">
-                <h3 className="font-futuristic text-lg tracking-[0.2em] mb-4 uppercase text-red-600 dark:text-red-500">
-                    {title}
-                </h3>
-                <p className="text-sm font-light text-neutral-600 dark:text-neutral-400 mb-8 leading-relaxed">
-                    {message}
-                </p>
-                <div className="flex gap-4 justify-end">
-                    <button 
-                        onClick={onCancel}
-                        className="px-6 py-3 text-[10px] font-futuristic tracking-widest text-neutral-500 hover:text-black dark:hover:text-white transition-colors"
-                    >
-                        CANCELAR
-                    </button>
-                    <button 
-                        onClick={onConfirm}
-                        className="px-8 py-3 text-[10px] font-futuristic tracking-widest bg-red-600 text-white hover:bg-red-700 transition-colors"
-                    >
-                        ELIMINAR
-                    </button>
-                </div>
-            </div>
+const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
+  title,
+  message,
+  onConfirm,
+  onCancel,
+}) => {
+  return (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div
+        className="absolute inset-0 bg-black/90 backdrop-blur-md"
+        onClick={onCancel}
+      />
+      <div className="bg-white dark:bg-[#0A0A0A] w-full max-w-md p-8 border border-neutral-200 dark:border-neutral-800 shadow-2xl relative z-10">
+        <h3 className="font-futuristic text-lg tracking-[0.2em] mb-4 uppercase text-red-600 dark:text-red-500">
+          {title}
+        </h3>
+        <p className="text-sm font-light text-neutral-600 dark:text-neutral-400 mb-8 leading-relaxed">
+          {message}
+        </p>
+        <div className="flex gap-4 justify-end">
+          <button
+            onClick={onCancel}
+            className="px-6 py-3 text-[10px] font-futuristic tracking-widest text-neutral-500 hover:text-black dark:hover:text-white transition-colors"
+          >
+            CANCELAR
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-8 py-3 text-[10px] font-futuristic tracking-widest bg-red-600 text-white hover:bg-red-700 transition-colors"
+          >
+            ELIMINAR
+          </button>
         </div>
-    );
+      </div>
+    </div>
+  );
 };

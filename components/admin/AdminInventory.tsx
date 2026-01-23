@@ -451,11 +451,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) newErrors.name = "EL NOMBRE ES REQUERIDO";
-    if (!formData.description.trim()) newErrors.description = "DESCRIPCIÓN REQUERIDA";
+    if (!formData.description.trim())
+      newErrors.description = "DESCRIPCIÓN REQUERIDA";
     if (!formData.category) newErrors.category = "CATEGORÍA REQUERIDA";
-    
+
     // Optional: Price validation if needed, but it's typed as number | undefined
-    
+
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
@@ -586,7 +587,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 className={`w-full bg-neutral-100 dark:bg-black border ${errors.name ? "border-red-500" : "border-neutral-200 dark:border-white/10"} p-3 rounded focus:border-black dark:focus:border-white outline-none transition-colors`}
               />
               {errors.name && (
-                <span className="text-[9px] text-red-500 font-futuristic tracking-widest">{errors.name}</span>
+                <span className="text-[9px] text-red-500 font-futuristic tracking-widest">
+                  {errors.name}
+                </span>
               )}
             </div>
             <div className="space-y-2">
@@ -657,7 +660,9 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 className={`w-full bg-neutral-100 dark:bg-black border ${errors.description ? "border-red-500" : "border-neutral-200 dark:border-white/10"} p-3 rounded focus:border-black dark:focus:border-white outline-none transition-colors`}
               />
               {errors.description && (
-                <span className="text-[9px] text-red-500 font-futuristic tracking-widest">{errors.description}</span>
+                <span className="text-[9px] text-red-500 font-futuristic tracking-widest">
+                  {errors.description}
+                </span>
               )}
             </div>
             <div className="col-span-2 space-y-2">

@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { useConfig } from "../context/ConfigContext";
 import { InventoryService, supabase } from "../services/supabase";
 import { optimizeImage } from "../utils/imageOptimizer";
 import RichTextEditor from "./ui/RichTextEditor";
-import { toast } from "sonner";
-
 
 const Hero: React.FC = () => {
   const { config, updateLocalConfig } = useConfig();
