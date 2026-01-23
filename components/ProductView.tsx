@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { GeminiService } from "../services/geminiService";
-import { Product } from "../types";
 import { useCart } from "../context/CartContext";
 import { useConfig } from "../context/ConfigContext";
+import { GeminiService } from "../services/geminiService";
+import { Product } from "../types";
 
 interface ProductViewProps {
   product: Product;
@@ -120,23 +120,23 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
       // Convert product image to base64
       let productBase64 = null;
       try {
-          const response = await fetch(product.image);
-          const blob = await response.blob();
-          productBase64 = await new Promise<string>((resolve) => {
-              const reader = new FileReader();
-              reader.onloadend = () => resolve(reader.result as string);
-              reader.readAsDataURL(blob);
-          });
+        const response = await fetch(product.image);
+        const blob = await response.blob();
+        productBase64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
       } catch (e) {
-          console.error("Failed to load product image for AI", e);
+        console.error("Failed to load product image for AI", e);
       }
 
       if (productBase64) {
         const result = await GeminiService.visualizeLighting(
-            userImage,
-            productBase64,
-            product.name,
-            fullPrompt,
+          userImage,
+          productBase64,
+          product.name,
+          fullPrompt,
         );
         setResultImage(result);
       } else {
@@ -232,7 +232,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
           onClick={() => setFullscreenImage(allImages[galleryIndex])}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
-        
+
         {/* Navigation Arrows & Counter */}
         {allImages.length > 1 && (
           <div className="absolute inset-x-8 md:inset-x-12 top-1/2 -translate-y-1/2 flex justify-between items-center z-20 pointer-events-none">
@@ -240,27 +240,51 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setGalleryIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
+                setGalleryIndex((prev) =>
+                  prev === 0 ? allImages.length - 1 : prev - 1,
+                );
               }}
               className="pointer-events-auto p-4 rounded-full bg-white/5 backdrop-blur-md text-white hover:bg-white/20 transition-all opacity-0 group-hover/hero:opacity-100"
               title="Anterior"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 19l-7-7 7-7" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </button>
-            
+
             <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setGalleryIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
+                setGalleryIndex((prev) =>
+                  prev === allImages.length - 1 ? 0 : prev + 1,
+                );
               }}
               className="pointer-events-auto p-4 rounded-full bg-white/5 backdrop-blur-md text-white hover:bg-white/20 transition-all opacity-0 group-hover/hero:opacity-100"
               title="Siguiente"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5l7 7-7 7" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
           </div>
@@ -268,13 +292,13 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
 
         {/* Image Counter */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none opacity-0 group-hover/hero:opacity-100 transition-opacity duration-300">
-           {allImages.length > 1 && (
-             <div className="bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
-                <span className="font-futuristic text-[10px] tracking-[0.3em] text-white">
-                  {galleryIndex + 1}/{allImages.length}
-                </span>
-             </div>
-           )}
+          {allImages.length > 1 && (
+            <div className="bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+              <span className="font-futuristic text-[10px] tracking-[0.3em] text-white">
+                {galleryIndex + 1}/{allImages.length}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="relative z-10 w-full">
@@ -324,7 +348,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
                   ${product.category === "tech" ? "999" : "399"}
                 </div>
               </div>
-              
+
               <button
                 onClick={() => {
                   addItem(product);
@@ -345,20 +369,20 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
           </div>
 
           <div className="grid grid-cols-1 gap-8">
-              {product.gallery.map((img, idx) => (
-                <div
-                  key={idx}
-                  className="aspect-video bg-neutral-100 overflow-hidden group border border-black/5 cursor-zoom-in"
-                  onClick={() => setFullscreenImage(img)}
-                >
-                  <img
-                    src={img}
-                    alt={`Gallery ${idx}`}
-                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 scale-110 group-hover:scale-100"
-                  />
-                </div>
-              ))}
-            </div>
+            {product.gallery.map((img, idx) => (
+              <div
+                key={idx}
+                className="aspect-video bg-neutral-100 overflow-hidden group border border-black/5 cursor-zoom-in"
+                onClick={() => setFullscreenImage(img)}
+              >
+                <img
+                  src={img}
+                  alt={`Gallery ${idx}`}
+                  className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000 scale-110 group-hover:scale-100"
+                />
+              </div>
+            ))}
+          </div>
 
           {/* AI Room Visualizer Section */}
           <div className="border-t border-black/10 pt-24">
@@ -369,33 +393,11 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
               {/* Controls Column */}
               <div className="space-y-8">
-                { !config.ai_active ? (
-                    <div className="h-full flex items-center justify-center border border-dashed border-neutral-300 dark:border-white/10 p-12 text-center text-neutral-400">
-                        <div className="space-y-4">
-                             <svg className="w-8 h-8 mx-auto opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                             </svg>
-                             <p className="text-xs font-futuristic tracking-widest">
-                                 AI_MODULE_DISABLED
-                             </p>
-                        </div>
-                    </div>
-                ) : (
-                <>
-                {/* Upload Box */}
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="aspect-video bg-neutral-50 border border-dashed border-black/20 hover:border-black transition-colors cursor-pointer flex flex-col items-center justify-center group relative overflow-hidden"
-                >
-                  {userImage ? (
-                    <img
-                      src={userImage}
-                      className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity"
-                    />
-                  ) : (
-                    <div className="text-center space-y-4">
+                {!config.ai_active ? (
+                  <div className="h-full flex items-center justify-center border border-dashed border-neutral-300 dark:border-white/10 p-12 text-center text-neutral-400">
+                    <div className="space-y-4">
                       <svg
-                        className="w-8 h-8 mx-auto opacity-20"
+                        className="w-8 h-8 mx-auto opacity-50"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -404,94 +406,126 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth="1"
-                          d="M12 4v16m8-8H4"
+                          d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
                         />
                       </svg>
-                      <span className="font-futuristic text-[9px] tracking-widest text-neutral-400 block">
-                        SUBIR_FOTO_ESPACIO
-                      </span>
+                      <p className="text-xs font-futuristic tracking-widest">
+                        AI_MODULE_DISABLED
+                      </p>
                     </div>
-                  )}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="hidden"
-                    accept="image/*"
-                  />
-                </div>
-
-                {/* Render Controls - Only if image uploaded */}
-                {userImage && (
-                  <div className="space-y-8 animate-in fade-in slide-in-from-top-4">
-                    <div className="space-y-4">
-                      <label className="font-futuristic text-[8px] tracking-[0.3em] text-neutral-400 uppercase block">
-                        1. VISIÓN_ALGORÍTMICA
-                      </label>
-                      <textarea
-                        value={clarification}
-                        onChange={(e) => setClarification(e.target.value)}
-                        placeholder="Describe el ambiente (ej: 'Minimalista, mucha luz, paredes blancas')..."
-                        className="w-full bg-neutral-50 border border-black/10 p-4 text-sm font-light focus:border-black focus:outline-none transition-colors min-h-[100px] resize-none"
+                  </div>
+                ) : (
+                  <>
+                    {/* Upload Box */}
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="aspect-video bg-neutral-50 border border-dashed border-black/20 hover:border-black transition-colors cursor-pointer flex flex-col items-center justify-center group relative overflow-hidden"
+                    >
+                      {userImage ? (
+                        <img
+                          src={userImage}
+                          className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity"
+                        />
+                      ) : (
+                        <div className="text-center space-y-4">
+                          <svg
+                            className="w-8 h-8 mx-auto opacity-20"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="1"
+                              d="M12 4v16m8-8H4"
+                            />
+                          </svg>
+                          <span className="font-futuristic text-[9px] tracking-widest text-neutral-400 block">
+                            SUBIR_FOTO_ESPACIO
+                          </span>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        className="hidden"
+                        accept="image/*"
                       />
                     </div>
 
-                    <div className="space-y-4">
-                      <label className="font-futuristic text-[8px] tracking-[0.3em] text-neutral-400 uppercase block">
-                        2. ESCENA_LUMÍNICA
-                      </label>
-                      <div className="grid grid-cols-3 gap-4">
-                        {/* Buttons with specific hover colors */}
-                        {[
-                          {
-                            id: "day",
-                            label: "DÍA",
-                            color: "bg-sky-300",
-                            text: "text-black",
-                          },
-                          {
-                            id: "sunset",
-                            label: "ATARDECER",
-                            color: "bg-orange-400",
-                            text: "text-white",
-                          },
-                          {
-                            id: "night",
-                            label: "NOCHE",
-                            color: "bg-black",
-                            text: "text-white",
-                          },
-                        ].map((theme) => (
-                          <button
-                            key={theme.id}
-                            onClick={() => setSelectedTheme(theme.id)}
-                            className={`relative py-4 border border-black/10 overflow-hidden group transition-all duration-300 ${selectedTheme === theme.id ? "border-transparent" : "bg-white"}`}
-                          >
-                            <div
-                              className={`absolute inset-0 transition-transform duration-500 ease-out ${selectedTheme === theme.id ? `translate-y-0 ${theme.color}` : `translate-y-full group-hover:translate-y-0 ${theme.color}`}`}
-                            />
-                            <span
-                              className={`relative z-10 font-futuristic text-[9px] tracking-widest transition-colors duration-300 ${selectedTheme === theme.id ? theme.text : "text-neutral-500 group-hover:" + theme.text}`}
-                            >
-                              {theme.label}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    {/* Render Controls - Only if image uploaded */}
+                    {userImage && (
+                      <div className="space-y-8 animate-in fade-in slide-in-from-top-4">
+                        <div className="space-y-4">
+                          <label className="font-futuristic text-[8px] tracking-[0.3em] text-neutral-400 uppercase block">
+                            1. VISIÓN_ALGORÍTMICA
+                          </label>
+                          <textarea
+                            value={clarification}
+                            onChange={(e) => setClarification(e.target.value)}
+                            placeholder="Describe el ambiente (ej: 'Minimalista, mucha luz, paredes blancas')..."
+                            className="w-full bg-neutral-50 border border-black/10 p-4 text-sm font-light focus:border-black focus:outline-none transition-colors min-h-[100px] resize-none"
+                          />
+                        </div>
 
-                    <button
-                      onClick={handleVisualize}
-                      disabled={isGenerating}
-                      className="w-full bg-black text-white py-6 font-futuristic text-[10px] tracking-[0.3em] uppercase hover:bg-neutral-800 transition-colors disabled:opacity-50"
-                    >
-                      {isGenerating
-                        ? "PROCESANDO_SIMULACIÓN..."
-                        : "3. RENDERIZAR_ESPACIO"}
-                    </button>
-                  </div>
-                )}
-                </>
+                        <div className="space-y-4">
+                          <label className="font-futuristic text-[8px] tracking-[0.3em] text-neutral-400 uppercase block">
+                            2. ESCENA_LUMÍNICA
+                          </label>
+                          <div className="grid grid-cols-3 gap-4">
+                            {/* Buttons with specific hover colors */}
+                            {[
+                              {
+                                id: "day",
+                                label: "DÍA",
+                                color: "bg-sky-300",
+                                text: "text-black",
+                              },
+                              {
+                                id: "sunset",
+                                label: "ATARDECER",
+                                color: "bg-orange-400",
+                                text: "text-white",
+                              },
+                              {
+                                id: "night",
+                                label: "NOCHE",
+                                color: "bg-black",
+                                text: "text-white",
+                              },
+                            ].map((theme) => (
+                              <button
+                                key={theme.id}
+                                onClick={() => setSelectedTheme(theme.id)}
+                                className={`relative py-4 border border-black/10 overflow-hidden group transition-all duration-300 ${selectedTheme === theme.id ? "border-transparent" : "bg-white"}`}
+                              >
+                                <div
+                                  className={`absolute inset-0 transition-transform duration-500 ease-out ${selectedTheme === theme.id ? `translate-y-0 ${theme.color}` : `translate-y-full group-hover:translate-y-0 ${theme.color}`}`}
+                                />
+                                <span
+                                  className={`relative z-10 font-futuristic text-[9px] tracking-widest transition-colors duration-300 ${selectedTheme === theme.id ? theme.text : "text-neutral-500 group-hover:" + theme.text}`}
+                                >
+                                  {theme.label}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={handleVisualize}
+                          disabled={isGenerating}
+                          className="w-full bg-black text-white py-6 font-futuristic text-[10px] tracking-[0.3em] uppercase hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                        >
+                          {isGenerating
+                            ? "PROCESANDO_SIMULACIÓN..."
+                            : "3. RENDERIZAR_ESPACIO"}
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
