@@ -9,20 +9,31 @@ const FloatingAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]); // Initialize empty then set effect
 
-  useEffect(() => {
-     setMessages([
-        {
-            role: "model",
-            text: `Bienvenido a ${config.site_name}. Soy su asistente de diseño. ¿Qué atmósfera lumínica desea crear hoy?`,
-        },
-     ]);
-  }, [config.site_name]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
 
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleOpenAssistant = (event: CustomEvent) => {
+      setIsOpen(true);
+      if (event.detail?.initialMessage) {
+        // Use a short timeout to ensure state updates before sending
+        setTimeout(() => {
+             handleSend(event.detail.initialMessage);
+        }, 100);
+      }
+    };
+
+    window.addEventListener("open-ai-assistant", handleOpenAssistant as EventListener);
+    return () => {
+      window.removeEventListener("open-ai-assistant", handleOpenAssistant as EventListener);
+    };
+  }, [messages, isTyping]); // Re-bind with latest state references if needed, or use functional state updates inside handleSend
+
+
 
   if (!config.ai_active) return null;
 
@@ -55,11 +66,12 @@ const FloatingAssistant: React.FC = () => {
     };
   }, [isOpen]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isTyping) return;
-    const userMsg = input.trim();
+  const handleSend = async (messageText?: string) => {
+    const textToSend = messageText || input.trim();
+    if (!textToSend || isTyping) return;
+    
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", text: userMsg }]);
+    setMessages((prev) => [...prev, { role: "user", text: textToSend }]);
     setIsTyping(true);
 
     const history = messages
@@ -69,9 +81,15 @@ const FloatingAssistant: React.FC = () => {
         parts: [{ text: m.text }],
       }));
 
-    const response = await GeminiService.getDesignAdvice(userMsg, history);
-    setIsTyping(false);
-    setMessages((prev) => [...prev, { role: "model", text: response || "" }]);
+    try {
+        const response = await GeminiService.getDesignAdvice(textToSend, history);
+        setIsTyping(false);
+        setMessages((prev) => [...prev, { role: "model", text: response || "" }]);
+    } catch (e) {
+        console.error("Chat error:", e);
+        setIsTyping(false);
+        setMessages((prev) => [...prev, { role: "model", text: "Error de conexión. Por favor verifica tu API Key." }]);
+    }
   };
 
   return (
@@ -198,8 +216,8 @@ const FloatingAssistant: React.FC = () => {
               className="w-full text-xs font-light outline-none bg-white border border-black/10 rounded-full py-4 pl-6 pr-14 focus:border-black/30 shadow-inner transition-all"
             />
             <button
-              onClick={handleSend}
               className="absolute right-2 w-10 h-10 bg-black text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg"
+              onClick={() => handleSend()}
             >
               <svg
                 className="w-4 h-4"

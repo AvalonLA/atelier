@@ -23,6 +23,7 @@ import Footer from "./components/Footer";
 import ProductView from "./components/ProductView";
 import VisionSection from "./components/VisionSection";
 import { Product } from "./types";
+import { Analytics } from "@vercel/analytics/react";
 
 const AppContent: React.FC = () => {
   useEffect(() => {
@@ -181,7 +182,7 @@ const AppContent: React.FC = () => {
       ) : currentView === "checkout" ? (
         <Checkout />
       ) : (
-        <main className="pt-20 animate-in slide-in-from-bottom-10 duration-1000 min-h-screen">
+        <main className="animate-in slide-in-from-bottom-10 duration-1000 min-h-screen">
           <FeatureGrid onSelectProduct={setSelectedProduct} showAll={true} />
         </main>
       )}
@@ -216,6 +217,7 @@ const App: React.FC = () => {
     <ConfigProvider>
       <CartProvider>
         <AppContent />
+        <Analytics />
       </CartProvider>
     </ConfigProvider>
   );

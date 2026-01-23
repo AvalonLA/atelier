@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useConfig } from "../context/ConfigContext";
 import { supabase, InventoryService } from "../services/supabase";
+import RichTextEditor from "./ui/RichTextEditor";
+import { optimizeImage } from "../utils/imageOptimizer";
 
 const About: React.FC = () => {
     const { config, updateLocalConfig } = useConfig();
@@ -46,8 +48,8 @@ const About: React.FC = () => {
         try {
             // Delete old image if it was from supabase?
             // Optional optimization: check if editValues.items[index].image includes supabase and delete it
-            
-            const url = await InventoryService.uploadImage(e.target.files[0]);
+            const file = await optimizeImage(e.target.files[0]);
+            const url = await InventoryService.uploadImage(file);
             const newItems = [...editValues.items];
             newItems[index] = { ...newItems[index], image: url };
             setEditValues(prev => ({ ...prev, items: newItems }));
@@ -145,15 +147,18 @@ const About: React.FC = () => {
             )}
           </h1>
           {isEditing ? (
-             <textarea 
-                value={editValues.description}
-                onChange={e => setEditValues({...editValues, description: e.target.value})}
-                className="w-full max-w-2xl mx-auto bg-transparent border border-white/20 rounded p-4 outline-none text-neutral-400 font-light text-lg leading-relaxed focus:border-white h-32"
+             <RichTextEditor
+                tagName="p"
+                initialValue={editValues.description}
+                onChange={(val: string) => setEditValues({ ...editValues, description: val })}
+                className="w-full max-w-2xl mx-auto bg-transparent border border-white/20 rounded p-4 outline-none text-neutral-400 font-light text-lg leading-relaxed focus:border-white h-auto min-h-[8rem]"
+                placeholder="Descripción..."
              />
           ) : (
-            <p className="max-w-2xl mx-auto text-neutral-400 font-light text-lg leading-relaxed">
-                {config.about_description || "ATELIER no es solo una marca de iluminación; es un laboratorio de ingeniería lumínica donde el futuro de la arquitectura se encuentra con la precisión técnica."}
-            </p>
+            <p 
+                className="max-w-2xl mx-auto text-neutral-400 font-light text-lg leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: config.about_description || "ATELIER no es solo una marca de iluminación; es un laboratorio de ingeniería lumínica donde el futuro de la arquitectura se encuentra con la precisión técnica." }}
+            />
           )}
         </div>
       </section>
@@ -231,17 +236,17 @@ const About: React.FC = () => {
                     </h3>
                 )}
                 
-                {isEditing ? (
-                    <textarea 
-                        value={item.description}
-                        onChange={e => handleItemChange(index, "description", e.target.value)}
-                        className="text-neutral-500 font-light leading-relaxed text-lg bg-transparent border border-white/10 w-full h-32 p-2 outline-none focus:border-white"
-                    />
-                ) : (
-                    <p className="text-neutral-500 font-light leading-relaxed text-lg">
-                    {item.description}
-                    </p>
-                )}
+                   {isEditing ? (
+                      <RichTextEditor
+                        tagName="div"
+                        initialValue={item.description}
+                        onChange={(val: string) => handleItemChange(index, "description", val)}
+                        className="text-neutral-500 font-light leading-relaxed text-lg bg-transparent border border-white/10 w-full h-auto min-h-[8rem] p-2 outline-none focus:border-white"
+                        placeholder="Descripción del item..."
+                      />
+                   ) : (
+                    <p className="text-neutral-500 font-light leading-relaxed text-lg" dangerouslySetInnerHTML={{ __html: item.description }} />
+                   )}
                 
                 <div className="w-12 h-[1px] bg-white/20 mx-auto lg:mx-0"></div>
               </div>

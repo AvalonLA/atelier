@@ -15,6 +15,7 @@ const defaultConfig: AppConfig = {
   contact_email: "contact@atelier.com",
   contact_phone: "+54 9 11 1234 5678",
   opening_hours: "Lun - Vie: 10:00 - 19:00",
+  theme: "dark",
   ai_active: true,
   use_mock_data: true,
   hero_headline: "ATELIER",
@@ -88,6 +89,18 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     loadConfig();
   }, []);
+
+  // Sync theme with config
+  useEffect(() => {
+      if (config.theme) {
+          const root = window.document.documentElement;
+          if (config.theme === "dark") {
+              root.classList.add("dark");
+          } else {
+              root.classList.remove("dark");
+          }
+      }
+  }, [config.theme]);
 
   const loadConfig = async () => {
     try {

@@ -6,9 +6,9 @@ export class GeminiService {
    */
   static isConfigured(): boolean {
     return (
-      !!process.env.API_KEY &&
-      process.env.API_KEY !== "undefined" &&
-      process.env.API_KEY !== ""
+      !!import.meta.env.VITE_API_KEY &&
+      import.meta.env.VITE_API_KEY !== "undefined" &&
+      import.meta.env.VITE_API_KEY !== ""
     );
   }
 
@@ -17,7 +17,7 @@ export class GeminiService {
       console.warn("API Key missing for GeminiService");
       throw new Error("API_KEY_MISSING");
     }
-    return new GoogleGenAI({ apiKey: process.env.API_KEY });
+    return new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
   }
 
   static async getDesignAdvice(

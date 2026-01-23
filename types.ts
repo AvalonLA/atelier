@@ -4,6 +4,7 @@ export interface Product {
   category: "pendant" | "floor" | "table" | "tech";
   description: string;
   longDescription: string;
+  price?: number;
   image: string;
   gallery: string[];
   tag: string;
@@ -47,6 +48,7 @@ export interface AppConfig {
   contact_email: string;
   contact_phone: string;
   opening_hours: string;
+  theme?: "dark" | "light";
   ai_active: boolean;
   use_mock_data: boolean;
   hero_headline?: string;

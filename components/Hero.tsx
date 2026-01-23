@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useConfig } from "../context/ConfigContext";
 import { supabase, InventoryService } from "../services/supabase";
+import { optimizeImage } from "../utils/imageOptimizer";
+import RichTextEditor from "./ui/RichTextEditor";
 
 const Hero: React.FC = () => {
   const { config, updateLocalConfig } = useConfig();
@@ -76,7 +78,10 @@ const Hero: React.FC = () => {
     const file = e.target.files[0];
     setIsUploading(true);
     try {
-        const publicUrl = await InventoryService.uploadImage(file);
+        // Convert to WebP
+        const optimizedFile = await optimizeImage(file);
+        
+        const publicUrl = await InventoryService.uploadImage(optimizedFile);
         setEditValues(prev => ({ ...prev, imageUrl: publicUrl }));
     } catch (error) {
         console.error("Error uploading image:", error);
@@ -118,13 +123,17 @@ const Hero: React.FC = () => {
                     />
                     <button 
                         onClick={() => fileInputRef.current?.click()}
-                        className={`p-2 bg-blue-500/80 backdrop-blur-md rounded-full text-white hover:bg-blue-500 transition-all ${isUploading ? 'animate-pulse' : ''}`}
+                        className={`p-2 bg-blue-500/80 backdrop-blur-md rounded-full text-white hover:bg-blue-500 transition-all ${isUploading ? 'animate-pulse w-auto px-4' : ''}`}
                         title="Cambiar Imagen de Fondo"
                         disabled={isUploading}
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+                        {isUploading ? (
+                           <span className="text-[10px] font-futuristic tracking-wider">OPTIMIZANDO...</span>
+                        ) : (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        )}
                     </button>
                     <button 
                         onClick={handleSave}
@@ -194,15 +203,18 @@ const Hero: React.FC = () => {
         </h1>
         
         {isEditing ? (
-             <textarea 
-                value={editValues.text}
-                onChange={e => setEditValues({...editValues, text: e.target.value})}
-                className="w-full max-w-xl mx-auto bg-transparent border border-white/20 rounded p-4 outline-none text-neutral-400 font-light text-sm md:text-base tracking-[0.15em] leading-relaxed mb-16 uppercase focus:border-white focus:bg-white/5 resize-none h-32"
+             <RichTextEditor 
+                tagName="p"
+                initialValue={editValues.text}
+                onChange={val => setEditValues({...editValues, text: val})}
+                className="w-full max-w-2xl mx-auto bg-transparent border border-white/20 rounded p-4 outline-none text-neutral-400 font-light text-sm md:text-base tracking-[0.15em] leading-relaxed mb-16 uppercase focus:border-white focus:bg-white/5 h-auto min-h-[8rem]"
+                placeholder="TEXTO PRINCIPAL..."
              />
         ) : (
-            <p className="max-w-xl mx-auto text-neutral-400 font-light text-sm md:text-base tracking-[0.15em] leading-relaxed mb-16 uppercase">
-            {config.hero_text || "La interfaz definitiva entre la luz y el espacio. Sistemas de iluminación de alta precisión diseñados para el confort visual."}
-            </p>
+            <p 
+                className="max-w-xl mx-auto text-neutral-400 font-light text-sm md:text-base tracking-[0.15em] leading-relaxed mb-16 uppercase"
+                dangerouslySetInnerHTML={{ __html: config.hero_text || "La interfaz definitiva entre la luz y el espacio. Sistemas de iluminación de alta precisión diseñados para el confort visual." }}
+            />
         )}
 
         <div className="flex flex-col md:flex-row items-center justify-center gap-10">

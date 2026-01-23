@@ -3,7 +3,7 @@ import { useCart } from "../context/CartContext";
 import { OrderService } from "../services/supabase";
 
 const Checkout: React.FC = () => {
-  const { items, total, clearCart } = useCart();
+  const { items, total, clearCart, updateQuantity } = useCart();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -226,27 +226,39 @@ const Checkout: React.FC = () => {
 
             <div className="space-y-6 mb-8">
               {items.map((item) => (
-                <div key={item.id} className="flex gap-4">
-                  <div className="w-16 h-20 bg-neutral-900 shrink-0">
+                <div key={item.id} className="flex gap-4 group">
+                  <div className="w-16 h-20 bg-neutral-900 shrink-0 relative overflow-hidden">
                     <img
                       src={item.image}
                       alt={item.name}
-                      className="w-full h-full object-cover opacity-80"
+                      className="w-full h-full object-cover opacity-80 transition-opacity group-hover:opacity-100"
                     />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-futuristic text-sm tracking-wider uppercase mb-1">
-                      {item.name}
-                    </h3>
-                    <p className="text-[10px] text-neutral-500 tracking-wider">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start">
+                        <h3 className="font-futuristic text-[10px] tracking-widest uppercase mb-1 truncate pr-2 text-white">
+                        {item.name}
+                        </h3>
+                         <button
+                            onClick={() => updateQuantity(item.id, 0)}
+                            className="text-neutral-600 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                            title="Eliminar"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <p className="text-[9px] text-neutral-500 tracking-wider">
                       CANT: {item.quantity}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-light tracking-wide">
+                    <p className="font-light tracking-wide text-sm">
                       $
-                      {(item.price || (item.category === "tech" ? 999 : 399)) *
-                        item.quantity}
+                      {((item.price || (item.category === "tech" ? 999 : 399)) *
+                        item.quantity).toLocaleString()}
                     </p>
                   </div>
                 </div>

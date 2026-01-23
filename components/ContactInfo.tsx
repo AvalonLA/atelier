@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useConfig } from "../context/ConfigContext";
 import { supabase } from "../services/supabase";
+import RichTextEditor from "./ui/RichTextEditor";
 
 const ContactInfo: React.FC = () => {
   const { config, updateLocalConfig } = useConfig();
@@ -104,10 +105,12 @@ const ContactInfo: React.FC = () => {
               </h3>
               <h2 className="text-4xl md:text-6xl font-extralight tracking-tighter">
                 {isEditing ? (
-                     <textarea 
-                        value={editValues.subheadline}
-                        onChange={e => setEditValues({...editValues, subheadline: e.target.value})}
-                        className="bg-transparent border border-white/20 outline-none w-full h-32 p-2 focus:border-white transition-colors text-3xl"
+                     <RichTextEditor
+                        tagName="h2"
+                        initialValue={editValues.subheadline}
+                        onChange={(val: string) => setEditValues({...editValues, subheadline: val})}
+                        className="bg-transparent border border-white/20 outline-none w-full h-auto min-h-[8rem] p-2 focus:border-white transition-colors text-3xl font-extralight tracking-tighter"
+                        placeholder="Subtítulo..."
                      />
                 ) : (
                     <span dangerouslySetInnerHTML={{ __html: config.contact_subheadline || "ESTAMOS EN <br/> <span class='opacity-40 italic'>EL CENTRO.</span>" }} />
@@ -133,6 +136,34 @@ const ContactInfo: React.FC = () => {
                      />
                   ) : (
                     <p className="text-xl font-light">{config.contact_address || "Calle 12 y 50 N° 820, La Plata"}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-start gap-6">
+                <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                </div>
+                <div>
+                  <h4 className="font-futuristic text-[9px] tracking-widest text-neutral-500 mb-2 uppercase">WHATSAPP</h4>
+                  {isEditing ? (
+                     <input 
+                        value={editValues.phone}
+                        onChange={e => setEditValues({...editValues, phone: e.target.value})}
+                        className="text-xl font-light bg-transparent border-b border-white/20 outline-none w-full focus:border-white"
+                     />
+                  ) : (
+                    <button 
+                        onClick={() => {
+                            const phone = config.contact_phone.replace(/\D/g, "");
+                            window.open(`https://wa.me/${phone}`, "_blank");
+                        }}
+                        className="text-xl font-light hover:text-green-400 transition-colors"
+                    >
+                        {config.contact_phone}
+                    </button>
                   )}
                 </div>
               </div>

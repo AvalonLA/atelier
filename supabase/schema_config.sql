@@ -6,6 +6,7 @@ create table public.config (
   contact_email text default 'contact@atelier.com',
   contact_phone text default '+54 9 11 1234 5678',
   opening_hours text default 'Lun - Vie: 10:00 - 19:00',
+  theme text default 'dark',
   ai_active boolean default true,
   use_mock_data boolean default true,
   

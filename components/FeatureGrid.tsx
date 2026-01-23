@@ -5,6 +5,8 @@ import { useConfig } from "../context/ConfigContext";
 import { useProducts } from "../hooks/useProducts";
 import { supabase } from "../services/supabase";
 import { Product } from "../types";
+import RichTextEditor from "./ui/RichTextEditor";
+import { optimizeImage } from "../utils/imageOptimizer";
 
 const ExpandingGridRow: React.FC<{
   products: Product[];
@@ -19,10 +21,7 @@ const ExpandingGridRow: React.FC<{
   };
 
   return (
-    <div
-      className="flex flex-col lg:flex-row w-full h-[70vh] lg:h-[80vh] overflow-hidden"
-      onMouseLeave={() => setExpandedIndex(null)}
-    >
+    <div className="flex flex-col lg:flex-row w-full h-[70vh] lg:h-[80vh] overflow-hidden">
       {products.map((p, i) => (
         <div
           key={p.id}
@@ -66,10 +65,15 @@ const ExpandingGridRow: React.FC<{
               <h3 className="font-futuristic text-3xl lg:text-5xl font-bold mb-4 transform translate-y-8 group-hover:translate-y-0 transition-transform duration-500 delay-150">
                 {p.name}
               </h3>
-              <div className="flex items-center gap-6 opacity-0 group-hover:opacity-100 transform translate-y-8 group-hover:translate-y-0 transition-all duration-700 delay-[1000ms]">
+              <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transform translate-y-8 group-hover:translate-y-0 transition-all duration-700 delay-[1000ms]">
                 <p className="font-futuristic text-xl lg:text-2xl font-light italic">
                   {p.description}
                 </p>
+                {p.price && (
+                   <p className="font-futuristic text-lg lg:text-xl font-bold">
+                     ${p.price.toLocaleString()}
+                   </p>
+                )}
               </div>
             </div>
           </div>
@@ -93,12 +97,53 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
   const { products: allProducts, loading } = useProducts();
   const { config, updateLocalConfig } = useConfig();
   const [filter, setFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<Record<string, string[]>>({});
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+      const handleScroll = () => {
+          setScrollY(window.scrollY);
+      };
+      
+      window.addEventListener("scroll", handleScroll);
+      return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const heroOpacity = Math.max(0, 1 - scrollY / 600);
+  const heroScale = Math.max(1, 1.1 - scrollY / 2000);
+
+
+  // Toggle Advanced Filter
+  const toggleAdvancedFilter = (category: string, value: string) => {
+    setAdvancedFilters((prev) => {
+      const current = prev[category] || [];
+      const newCategory = current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value];
+
+      if (newCategory.length === 0) {
+        const { [category]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [category]: newCategory };
+    });
+  };
+
+  const clearAllFilters = () => {
+    setFilter("all");
+    setSearchQuery("");
+    setAdvancedFilters({});
+  };
+
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -169,8 +214,9 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
     if (!e.target.files || e.target.files.length === 0) return;
     setIsUploading(true);
     try {
+      const file = await optimizeImage(e.target.files[0]);
       const url = await import("../services/supabase").then((m) =>
-        m.InventoryService.uploadImage(e.target.files![0]),
+        m.InventoryService.uploadImage(file),
       );
       setEditValues((prev) => ({ ...prev, collectionImage: url }));
     } catch (e) {
@@ -197,10 +243,38 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
   }, [filter, showAll]);
 
   const filteredProducts = useMemo(() => {
-    return filter === "all"
-      ? allProducts
-      : allProducts.filter((p) => p.category === filter);
-  }, [filter, allProducts]);
+    let result = allProducts;
+    if (filter !== "all") {
+      result = result.filter((p) => p.category === filter);
+    }
+
+    // Apply Advanced Filters
+    Object.entries(advancedFilters).forEach(([category, values]) => {
+      if (values.length > 0) {
+        result = result.filter((p) =>
+          values.some((val) =>
+            p.specs?.some(
+              (spec) =>
+                spec.label.toLowerCase() === category.toLowerCase() &&
+                spec.value.toLowerCase().includes(val.toLowerCase()),
+            ),
+          ),
+        );
+      }
+    });
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.longDescription.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [filter, allProducts, searchQuery, advancedFilters]);
+
 
   const productChunks = useMemo(() => {
     const chunks = [];
@@ -246,7 +320,7 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
   return (
     <section
       id="showcase"
-      className="py-24 bg-[#050505] transition-all duration-1000 overflow-hidden relative group/showcase"
+      className={`${showAll ? "min-h-screen pt-0" : "py-24"} bg-[#050505] transition-all duration-1000 overflow-hidden relative group/showcase`}
     >
       {/* Admin Controls */}
       {isAdmin && (
@@ -317,9 +391,9 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
       )}
 
       {showAll && (
-        <div className="relative h-[60vh] flex items-center justify-center overflow-hidden mb-24 group/hero">
+        <div className="relative h-screen w-full flex items-center justify-center overflow-hidden mb-24 group/hero">
           {isEditing && (
-            <div className="absolute top-4 left-4 z-50 flex gap-2">
+            <div className="absolute top-24 left-4 z-50 flex gap-2">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -327,40 +401,56 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
                 className="hidden"
                 accept="image/*"
               />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className={`px-4 py-2 bg-blue-500/80 backdrop-blur-md rounded text-white text-[10px] tracking-widest hover:bg-blue-500 transition-all ${isUploading ? "animate-pulse" : ""}`}
+               <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`p-2 bg-blue-500/80 backdrop-blur-md rounded-full text-white hover:bg-blue-500 transition-all ${isUploading ? 'animate-pulse w-auto px-4' : ''}`}
+                  title="Cambiar Imagen"
+                  disabled={isUploading}
               >
-                {isUploading ? "SUBIENDO..." : "CAMBIAR IMAGEN"}
+                  {isUploading ? (
+                      <span className="text-[10px] font-futuristic tracking-wider">OPTIMIZANDO...</span>
+                  ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                  )}
               </button>
             </div>
           )}
 
-          <img
-            src={
-              isEditing
-                ? editValues.collectionImage
-                : config.collection_hero_image_url ||
-                  "/images/pexels-photo-276528.webp"
-            }
-            alt="Collection Hero"
-            className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale"
-          />
-          <div className="absolute inset-0 bg-black/60"></div>
-          <div className="relative z-10 text-center space-y-4">
+          <div 
+            className="absolute inset-0 w-full h-full"
+            style={{
+                transform: `scale(${heroScale})`
+            }}
+          >
+            <img
+                src={
+                isEditing
+                    ? editValues.collectionImage
+                    : config.collection_hero_image_url ||
+                    "/images/pexels-photo-276528.webp"
+                }
+                alt="Collection Hero"
+                className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale"
+            />
+             <div className="absolute inset-0 bg-black/60"></div>
+          </div>
+          
+          <div 
+             className="relative z-10 text-center space-y-4"
+             style={{ opacity: heroOpacity, transform: `translateY(${scrollY * 0.5}px)` }}
+          >
             {isEditing ? (
-              <div className="flex flex-col items-center gap-4">
-                <textarea
-                  value={editValues.collectionHeadline}
-                  onChange={(e) =>
-                    setEditValues({
-                      ...editValues,
-                      collectionHeadline: e.target.value,
-                    })
-                  }
-                  className="font-futuristic text-5xl md:text-8xl tracking-tighter uppercase font-thin bg-transparent border border-white/20 text-center w-[80vw] h-48 focus:border-white focus:outline-none p-4"
-                />
-                <input
+              <div className="flex flex-col items-center gap-4 w-full">
+                 <RichTextEditor
+                    tagName="h1"
+                    initialValue={editValues.collectionHeadline}
+                    onChange={(val) => setEditValues({ ...editValues, collectionHeadline: val })}
+                    className="font-futuristic text-5xl md:text-8xl tracking-tighter uppercase font-thin bg-transparent border border-white/20 text-center w-full max-w-5xl h-auto min-h-[10rem] p-4 focus:border-white focus:outline-none"
+                    placeholder="TITULO CATALOGO..."
+                 />
+                 <input
                   value={editValues.collectionSubheadline}
                   onChange={(e) =>
                     setEditValues({
@@ -368,7 +458,7 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
                       collectionSubheadline: e.target.value,
                     })
                   }
-                  className="font-futuristic text-[10px] tracking-[0.6em] text-neutral-500 bg-transparent border-b border-white/20 w-fit text-center focus:border-white focus:outline-none pb-2"
+                  className="font-futuristic text-[10px] tracking-[0.6em] text-neutral-500 bg-transparent border-b border-white/20 w-full max-w-lg text-center focus:border-white focus:outline-none pb-2 mt-4"
                 />
               </div>
             ) : (
@@ -391,8 +481,8 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
         </div>
       )}
 
-      <div className="max-w-[100vw] mx-auto px-4">
-        <div className="flex flex-col mb-16 gap-8 px-6">
+      <div className="max-w-[100vw] mx-auto">
+        <div className="flex flex-col mb-16 gap-8 px-10">
           <div className="max-w-2xl">
             <h3 className="font-futuristic text-[10px] tracking-[0.5em] text-neutral-500 mb-4 uppercase">
               {isEditing ? (
@@ -416,18 +506,23 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
             </h3>
             <h2 className="text-4xl md:text-8xl font-extralight tracking-tighter leading-none mb-12">
               {isEditing ? (
-                <textarea
-                  value={editValues.headline}
-                  onChange={(e) =>
-                    setEditValues({ ...editValues, headline: e.target.value })
-                  }
-                  className="bg-transparent border border-white/20 outline-none w-full h-32 p-2 focus:border-white transition-colors text-4xl"
-                />
+                 <RichTextEditor
+                    tagName="h2"
+                    initialValue={editValues.headline}
+                    onChange={(val) => setEditValues({ ...editValues, headline: val })}
+                    className="bg-transparent border border-white/20 outline-none w-full h-auto min-h-[8rem] focus:border-white transition-colors p-2 text-4xl font-extralight tracking-tighter"
+                    placeholder="TITULO PRINCIPAL..."
+                 />
               ) : (
                 <span
                   dangerouslySetInnerHTML={{
                     __html: showAll
-                      ? config.catalog_headline_full ||
+                      ? config.catalog_headline_full || "SISTEMAS ATELIER."
+                      : config.catalog_headline || "DISEÑO EXPANSIVO.",
+                  }}
+                />
+              )}
+            </h2>
                         "SISTEMAS <br/> <span class='opacity-40 italic'>ATELIER.</span>"
                       : config.catalog_headline ||
                         "DISEÑO <br/> <span class='opacity-40 italic'>EXPANSIVO.</span>",
@@ -438,13 +533,31 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
 
             {showAll && (
               <div className="flex flex-col gap-8 relative z-[200]">
-                <div>
+                <div className="flex flex-col md:flex-row items-center gap-6">
                   <button
                     onClick={() => setShowFilters(!showFilters)}
                     className="font-futuristic text-xs tracking-[0.2em] border-b border-white/30 text-white/50 hover:text-white hover:border-white transition-all pb-1 uppercase"
                   >
                     {showFilters ? "- OCULTAR FILTROS" : "+ MOSTRAR FILTROS"}
                   </button>
+
+                  <div className="relative group">
+                     <input
+                        type="text"
+                        placeholder="BUSCAR_DISEÑO..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="bg-transparent border-b border-white/10 text-white font-futuristic text-[10px] tracking-widest uppercase w-48 focus:w-64 focus:border-white outline-none transition-all py-1 pl-6"
+                      />
+                      <svg 
+                        className="w-3 h-3 text-white/50 absolute left-0 top-1/2 -translate-y-1/2 pointer-events-none"
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                  </div>
                 </div>
 
                 {showFilters && (
@@ -461,7 +574,7 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
                           className={`relative z-[300] font-futuristic text-[11px] tracking-widest transition-all duration-300 cursor-pointer outline-none select-none px-4 py-3 bg-transparent md:bg-black/40 ${
                             filter === f.id
                               ? "text-white tracking-[0.25em] border-b border-white"
-                              : "text-[#a3a3a3] hover:text-white hover:tracking-[0.25em] border-b border-transparent hover:border-white/20"
+                              : "text-[#a3a3a3] hover:text-white border-b border-transparent hover:border-white/20"
                           }`}
                         >
                           {f.label}
@@ -470,9 +583,77 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
                     </div>
 
                     <div>
-                      <button className="font-futuristic text-[10px] tracking-[0.2em] bg-white/5 px-6 py-2 text-neutral-400 hover:text-white hover:bg-white/10 transition-colors uppercase">
-                        FILTROS AVANZADOS +
-                      </button>
+                      <div className="flex items-center justify-between border-t border-white/5 pt-6">
+                        <button
+                          onClick={() =>
+                            setShowAdvancedFilters(!showAdvancedFilters)
+                          }
+                          className="font-futuristic text-[10px] tracking-[0.2em] bg-white/5 px-6 py-2 text-neutral-400 hover:text-white hover:bg-white/10 transition-colors uppercase"
+                        >
+                          {showAdvancedFilters
+                            ? "FILTROS AVANZADOS -"
+                            : "FILTROS AVANZADOS +"}
+                        </button>
+
+                        <button
+                          onClick={clearAllFilters}
+                          className="font-futuristic text-[10px] tracking-[0.2em] text-neutral-500 hover:text-red-400 transition-colors uppercase"
+                        >
+                          LIMPIAR FILTROS X
+                        </button>
+                      </div>
+
+                      <div
+                        className={`grid transition-[grid-template-rows] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${showAdvancedFilters ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-50"}`}
+                      >
+                        <div className="overflow-hidden">
+                          <div className="mt-6 p-6 border border-white/10 bg-white/5 grid grid-cols-2 md:grid-cols-4 gap-8">
+                            {[
+                              {
+                                label: "Material",
+                                options: ["METAL", "VIDRIO", "MADERA", "HORMIGÓN"],
+                              },
+                              {
+                                label: "Color Temp",
+                                options: ["2700K", "3000K", "4000K", "TUNABLE"],
+                              },
+                              {
+                                label: "Dimming",
+                                options: ["DALI", "0-10V", "PHASE", "ZIGBEE"],
+                              },
+                            ].map((category) => (
+                              <div key={category.label} className="space-y-4">
+                                <h4 className="font-futuristic text-[9px] tracking-[0.2em] text-white/40 uppercase">
+                                  {category.label}
+                                </h4>
+                                <div className="space-y-2">
+                                  {category.options.map((option) => (
+                                    <label
+                                      key={option}
+                                      className="flex items-center gap-2 cursor-pointer group select-none"
+                                      onClick={() =>
+                                        toggleAdvancedFilter(
+                                          category.label,
+                                          option,
+                                        )
+                                      }
+                                    >
+                                      <div
+                                        className={`w-3 h-3 border transition-colors ${advancedFilters[category.label]?.includes(option) ? "bg-white border-white" : "border-white/20 group-hover:border-white"}`}
+                                      ></div>
+                                      <span
+                                        className={`font-futuristic text-[9px] tracking-widest transition-colors ${advancedFilters[category.label]?.includes(option) ? "text-white" : "text-neutral-400 group-hover:text-white"}`}
+                                      >
+                                        {option}
+                                      </span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -492,7 +673,7 @@ const FeatureGrid: React.FC<FeatureGridProps> = ({
         </div>
 
         {!showAll && (
-          <div className="mt-20 text-center pb-12">
+          <div className="mt-20 text-center pb-12 px-4">
             <button
               onClick={onShowAll}
               className="px-20 py-6 border border-white/10 hover:border-white transition-all duration-700 font-futuristic text-[10px] tracking-[0.5em] group overflow-hidden relative"

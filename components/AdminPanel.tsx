@@ -34,16 +34,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     window.innerWidth < 768,
   );
 
-  // Theme State
-  const [theme, setTheme] = useState<"dark" | "light">(() => {
-    if (typeof window !== "undefined") {
-      return document.documentElement.classList.contains("dark")
-        ? "dark"
-        : "light";
-    }
-    return "dark";
-  });
-
+  // Theme logic is now handled in ConfigContext
+  
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Close on ESC (only if authenticated to avoid accidental close during login)
@@ -71,19 +63,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     };
   }, [onClose]);
 
-  // Handle Theme Change
-  useEffect(() => {
-    const root = window.document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -287,13 +266,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         {/* Theme Toggle */}
         <div className="flex flex-col border-t border-black/5 dark:border-white/5">
              <button
-              onClick={toggleTheme}
+              onClick={() => updateLocalConfig({ theme: config.theme === 'dark' ? 'light' : 'dark' })}
               className={`font-futuristic text-[9px] tracking-[0.4em] text-neutral-500 hover:text-black dark:hover:text-white transition-colors flex items-center py-6 hover:bg-black/5 dark:hover:bg-white/5 ${isSidebarCollapsed ? "justify-center" : "px-8 gap-4"}`}
               title={
-                theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
+                config.theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
               }
             >
-              {theme === "dark" ? (
+              {config.theme === "dark" ? (
                 <svg
                   className="w-4 h-4 min-w-[1rem]"
                   fill="none"
@@ -473,16 +452,29 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
                   <div className="space-y-4">
                     <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 uppercase block">
+                      WHATSAPP_NUMBER
+                    </label>
+                    <input
+                      type="text"
+                      value={config.contact_phone}
+                      onChange={(e) => updateLocalConfig({ contact_phone: e.target.value })}
+                      className="w-full bg-neutral-100 dark:bg-black border border-black/10 dark:border-white/10 p-4 outline-none focus:border-black dark:focus:border-white transition-colors text-sm font-light"
+                      placeholder="+54 9 11 1234 5678"
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="font-futuristic text-[9px] tracking-widest text-neutral-500 uppercase block">
                       GLOBAL_THEME
                     </label>
                     <div className="flex gap-4">
                       <button
-                        onClick={() => setTheme("light")}
-                        className={`w-12 h-12 bg-white border border-neutral-200 shadow-sm ${theme === "light" ? "ring-2 ring-black ring-offset-2" : ""}`}
+                        onClick={() => updateLocalConfig({ theme: "light" })}
+                        className={`w-12 h-12 bg-white border border-neutral-200 shadow-sm ${config.theme === "light" ? "ring-2 ring-black ring-offset-2" : ""}`}
                       ></button>
                       <button
-                        onClick={() => setTheme("dark")}
-                        className={`w-12 h-12 bg-neutral-900 border border-neutral-800 ${theme === "dark" ? "ring-2 ring-white ring-offset-2 ring-offset-black" : ""}`}
+                        onClick={() => updateLocalConfig({ theme: "dark" })}
+                        className={`w-12 h-12 bg-neutral-900 border border-neutral-800 ${config.theme === "dark" ? "ring-2 ring-white ring-offset-2 ring-offset-black" : ""}`}
                       ></button>
                     </div>
                   </div>
