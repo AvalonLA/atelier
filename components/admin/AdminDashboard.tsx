@@ -1,12 +1,54 @@
 import React, { useEffect, useState } from "react";
-import { InventoryService } from "../../services/supabase";
+import { InventoryService, supabase } from "../../services/supabase";
 import { Product } from "../../types";
 
 export const AdminDashboard: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [counts, setCounts] = useState({
+    orders: 0,
+    consultations: 0,
+    lowStock: 0,
+  });
 
   useEffect(() => {
     InventoryService.getProducts().then(setProducts).catch(console.error);
+
+    const fetchCounts = async () => {
+      const { count: ordersCount } = await supabase
+        .from("orders")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending");
+
+      const { count: consultationsCount } = await supabase
+        .from("consultations")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending");
+
+      const { count: lowStockCount } = await supabase
+        .from("products")
+        .select("*", { count: "exact", head: true })
+        .lt("stock", 5);
+
+      setCounts({
+        orders: ordersCount || 0,
+        consultations: consultationsCount || 0,
+        lowStock: lowStockCount || 0,
+      });
+    };
+
+    fetchCounts();
+
+    const channel = supabase
+      .channel("dashboard_stats")
+      .on("postgres_changes", { event: "*", schema: "public" }, () => {
+        fetchCounts();
+        InventoryService.getProducts().then(setProducts).catch(console.error);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Stats Calculation
@@ -61,7 +103,12 @@ export const AdminDashboard: React.FC = () => {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-8">
         {[
-          { label: "TOTAL_SKU", value: totalProducts, change: "ACTIVE" },
+          {
+            label: "TOTAL_SKU",
+            value: totalProducts,
+            change: "ACTIVE",
+            alert: false,
+          },
           {
             label: "VALOR_STOCK",
             value: new Intl.NumberFormat("en-US", {
@@ -69,21 +116,36 @@ export const AdminDashboard: React.FC = () => {
               currency: "USD",
               maximumFractionDigits: 0,
             }).format(stockValue),
-            change: "ESTIMATED",
+            change: "ESTIMATED...",
+            alert: false,
           },
-          { label: "QUERIES_AI", value: "2,481", change: "+24%" },
-          { label: "CONVERSION", value: "4.2%", change: "-2%" },
+          {
+            label: "CONSULTAS_PENDING",
+            value: counts.consultations,
+            change: counts.consultations > 0 ? "ACTION_REQ" : "ALL_CLEAR",
+            alert: counts.consultations > 0,
+          },
+          {
+            label: "ORDENES_PENDING",
+            value: counts.orders,
+            change: counts.orders > 0 ? "PRIORITY" : "FULFILLED",
+            alert: counts.orders > 0,
+          },
         ].map((stat, i) => (
           <div
             key={i}
-            className="p-8 border border-black/5 dark:border-white/5 bg-neutral-50 dark:bg-black/40 hover:border-black/20 dark:hover:border-white/20 transition-colors"
+            className={`p-8 border bg-neutral-50 dark:bg-black/40 hover:border-black/20 dark:hover:border-white/20 transition-colors ${
+              stat.alert
+                ? "border-red-500/50 dark:border-red-500/50"
+                : "border-black/5 dark:border-white/5"
+            }`}
           >
             <span className="font-futuristic text-[9px] tracking-widest text-neutral-600 block mb-4 uppercase truncate">
               {stat.label}
             </span>
             <div className="flex items-baseline gap-4">
               <span
-                className="text-3xl font-light tracking-tighter truncate max-w-full block"
+                className={`text-3xl font-light tracking-tighter block ${stat.alert ? "text-red-500 font-normal" : ""}`}
                 title={
                   typeof stat.value === "string"
                     ? stat.value
@@ -96,9 +158,11 @@ export const AdminDashboard: React.FC = () => {
                 className={`text-[9px] font-futuristic tracking-widest ${
                   stat.change === "ACTIVE"
                     ? "text-blue-500"
-                    : stat.change.startsWith("+")
-                      ? "text-green-500"
-                      : "text-red-500"
+                    : stat.change === "ESTIMATED..."
+                      ? "text-neutral-400 animate-pulse"
+                      : stat.alert
+                        ? "text-red-500 animate-pulse"
+                        : "text-green-500"
                 }`}
               >
                 {stat.change}
