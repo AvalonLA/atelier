@@ -259,28 +259,28 @@ export const AdminInventory: React.FC = () => {
                           {product.description}
                         </div>
                       </td>
-                    <td className="px-6 py-4 hidden md:table-cell">
-                      <span className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 text-[9px] font-futuristic uppercase tracking-wider rounded">
-                        {product.category}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 hidden lg:table-cell">
-                      <span className="text-xs font-mono text-neutral-500">
-                        {product.tag}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`text-xs font-mono ${
-                          (product.stock || 0) > 0
-                            ? "text-neutral-500"
-                            : "text-red-500 font-bold"
-                        }`}
-                      >
-                        {product.stock || 0}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 hidden md:table-cell">
+                        <span className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 text-[9px] font-futuristic uppercase tracking-wider rounded">
+                          {product.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 hidden lg:table-cell">
+                        <span className="text-xs font-mono text-neutral-500">
+                          {product.tag}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`text-xs font-mono ${
+                            (product.stock || 0) > 0
+                              ? "text-neutral-500"
+                              : "text-red-500 font-bold"
+                          }`}
+                        >
+                          {product.stock || 0}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2 transition-opacity">
                           <button
                             onClick={() => {

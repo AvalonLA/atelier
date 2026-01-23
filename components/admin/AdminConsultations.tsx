@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useProducts } from "../../hooks/useProducts";
 import { ConsultationService } from "../../services/supabase";
 import { Consultation, Product } from "../../types";
-import { useProducts } from "../../hooks/useProducts";
 import { TableRowSkeleton } from "../ui/AdminSkeletons";
 
 export const AdminConsultations: React.FC = () => {

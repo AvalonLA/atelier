@@ -300,9 +300,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                     d={tab.icon}
                   />
                 </svg>
-                {isSidebarCollapsed && tab.id === "orders" && counts.orders > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-red-600 w-1.5 h-1.5 rounded-full z-[100] pointer-events-none shadow-sm"></span>
-                )}
+                {isSidebarCollapsed &&
+                  tab.id === "orders" &&
+                  counts.orders > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 bg-red-600 w-1.5 h-1.5 rounded-full z-[100] pointer-events-none shadow-sm"></span>
+                  )}
                 {isSidebarCollapsed &&
                   tab.id === "consultations" &&
                   counts.consultations > 0 && (

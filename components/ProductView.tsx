@@ -3,8 +3,8 @@ import { toast } from "sonner";
 import { useCart } from "../context/CartContext";
 import { useConfig } from "../context/ConfigContext";
 import { GeminiService } from "../services/geminiService";
-import { Product } from "../types";
 import { ConsultationService } from "../services/supabase";
+import { Product } from "../types";
 
 interface ProductViewProps {
   product: Product;
