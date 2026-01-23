@@ -32,7 +32,7 @@ export interface Order {
   email: string;
   address: string;
   status: "pending" | "processed" | "shipped" | "delivered" | "cancelled";
-  items?:  {
+  items?: {
     product: Product;
     quantity: number;
     price: number;
@@ -47,7 +47,7 @@ export interface AppConfig {
   contact_email: string;
   contact_phone: string;
   opening_hours: string;
-  ai_active: boolean; 
+  ai_active: boolean;
   use_mock_data: boolean;
   hero_headline?: string;
   hero_subheadline?: string;
@@ -56,7 +56,12 @@ export interface AppConfig {
   about_headline?: string;
   about_description?: string;
   about_image_url?: string;
-  about_history?: { year: string; title: string; description: string; image: string }[];
+  about_history?: {
+    year: string;
+    title: string;
+    description: string;
+    image: string;
+  }[];
   catalog_headline?: string;
   catalog_description?: string;
   catalog_headline_full?: string;
