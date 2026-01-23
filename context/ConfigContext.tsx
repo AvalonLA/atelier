@@ -57,6 +57,7 @@ const defaultConfig: AppConfig = {
   contact_subheadline: "ESTAMOS EN <br/> <span class='opacity-40 italic'>EL CENTRO.</span>",
   contact_address: "Calle 12 y 50 N° 820, La Plata",
   vision_text: "Diseño que trasciende la función para convertirse en <span class='text-white opacity-100 not-italic'>luz pura.</span>",
+  vision_image_url: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2070",
 };
 
 const ConfigContext = createContext<ConfigContextType>({

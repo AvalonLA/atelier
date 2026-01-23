@@ -8,6 +8,35 @@ create table public.config (
   opening_hours text default 'Lun - Vie: 10:00 - 19:00',
   ai_active boolean default true,
   use_mock_data boolean default true,
+  
+  -- Hero Section
+  hero_headline text,
+  hero_subheadline text,
+  hero_text text,
+  hero_image_url text,
+
+  -- About Section
+  about_headline text,
+  about_description text,
+  about_image_url text,
+  about_history jsonb, -- Array of history items
+
+  -- Catalog Section
+  catalog_headline text,
+  catalog_description text,
+  catalog_headline_full text,
+  catalog_description_full text,
+
+  -- Contact Section
+  contact_headline text,
+  contact_subheadline text,
+  contact_address text,
+  contact_map_url text,
+
+  -- Vision Section
+  vision_text text,
+  vision_image_url text,
+
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

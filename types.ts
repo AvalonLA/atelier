@@ -66,6 +66,7 @@ export interface AppConfig {
   contact_address?: string;
   contact_map_url?: string;
   vision_text?: string;
+  vision_image_url?: string;
 }
 
 export enum NavigationSection {
