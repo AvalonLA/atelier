@@ -1,11 +1,10 @@
 import Lenis from "lenis";
 import React, { useEffect, useState } from "react";
+import CartSidebar from "./components/CartSidebar";
 import Hero from "./components/Hero";
 import Navbar from "./components/Navbar";
 import { CartProvider } from "./context/CartContext";
 import { ConfigProvider } from "./context/ConfigContext";
-import CartSidebar from "./components/CartSidebar";
-
 
 // Add type declaration for window.lenis
 declare global {
@@ -16,13 +15,13 @@ declare global {
 
 import About from "./components/About";
 import AdminPanel from "./components/AdminPanel";
+import Checkout from "./components/Checkout";
 import ContactInfo from "./components/ContactInfo";
 import FeatureGrid from "./components/FeatureGrid";
 import FloatingAssistant from "./components/FloatingAssistant";
 import Footer from "./components/Footer";
 import ProductView from "./components/ProductView";
 import VisionSection from "./components/VisionSection";
-import Checkout from "./components/Checkout";
 import { Product } from "./types";
 
 const AppContent: React.FC = () => {
@@ -50,7 +49,9 @@ const AppContent: React.FC = () => {
   }, []);
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [currentView, setCurrentView] = useState<"home" | "collection" | "checkout">("home");
+  const [currentView, setCurrentView] = useState<
+    "home" | "collection" | "checkout"
+  >("home");
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   const scrollToSection = (id: string) => {
@@ -178,7 +179,7 @@ const AppContent: React.FC = () => {
           <VisionSection />
         </main>
       ) : currentView === "checkout" ? (
-         <Checkout />
+        <Checkout />
       ) : (
         <main className="pt-20 animate-in slide-in-from-bottom-10 duration-1000 min-h-screen">
           <FeatureGrid onSelectProduct={setSelectedProduct} showAll={true} />

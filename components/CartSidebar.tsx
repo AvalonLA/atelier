@@ -19,7 +19,7 @@ const CartSidebar: React.FC<{ onCheckout?: () => void }> = ({ onCheckout }) => {
   const handleCheckout = () => {
     setIsOpen(false);
     if (onCheckout) {
-        onCheckout();
+      onCheckout();
     }
   };
 
@@ -152,7 +152,11 @@ const CartSidebar: React.FC<{ onCheckout?: () => void }> = ({ onCheckout }) => {
                       </button>
                     </div>
                     <span className="font-light text-sm dark:text-white text-black">
-                      ${(parseFloat(item.category === "tech" ? "999" : "399") * item.quantity).toLocaleString()}
+                      $
+                      {(
+                        parseFloat(item.category === "tech" ? "999" : "399") *
+                        item.quantity
+                      ).toLocaleString()}
                     </span>
                   </div>
                 </div>
