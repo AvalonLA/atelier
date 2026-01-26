@@ -126,6 +126,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     };
   }, [onClose]);
 
+  const handleLogout = async () => {
+    setIsLoading(true);
+    await supabase.auth.signOut();
+    setIsAuthenticated(false);
+    setIsLoading(false);
+    onClose();
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -433,7 +441,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
         </div>
 
         <button
-          onClick={onClose}
+          onClick={handleLogout}
           className={`font-futuristic text-[9px] tracking-[0.4em] text-neutral-600 hover:text-black dark:hover:text-white transition-colors flex items-center py-6 hover:bg-black/5 dark:hover:bg-white/5 ${isSidebarCollapsed ? "justify-center" : "px-8 gap-4"}`}
           title="Logout"
         >
