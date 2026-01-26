@@ -1,108 +1,173 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef } from 'react';
 
 export const FloatingGeometryHero: React.FC = () => {
-    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            const x = (e.clientX / window.innerWidth - 0.5);
-            const y = (e.clientY / window.innerHeight - 0.5);
-            setMousePos({ x, y });
+        const canvas = canvasRef.current;
+        const container = containerRef.current;
+        if (!canvas || !container) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        let width = container.clientWidth;
+        let height = container.clientHeight;
+        
+        let mouseX = width / 2;
+        let mouseY = height / 2;
+
+        const resize = () => {
+             width = container.clientWidth;
+             height = container.clientHeight;
+             canvas.width = width;
+             canvas.height = height;
         };
+        
+        window.addEventListener('resize', resize);
+        resize();
+
+        const particles: Particle[] = [];
+        const particleCount = Math.min(Math.floor((width * height) / 10000), 100); // Responsive count
+
+        class Particle {
+            x: number;
+            y: number;
+            vx: number;
+            vy: number;
+            size: number;
+
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.5; // Slow movement
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Bounce off edges
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        };
+        
+        // Add mouse as an attractor/repulsor
         window.addEventListener('mousemove', handleMouseMove);
-        return () => window.removeEventListener('mousemove', handleMouseMove);
+
+        const animate = () => {
+            if(!ctx) return;
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw background gradient gently
+            const gradient = ctx.createLinearGradient(0, 0, width, height);
+            gradient.addColorStop(0, 'rgba(23, 23, 23, 0)'); // Zinc-900 like
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+
+            // Update particles
+            particles.forEach(p => p.update());
+
+            // Draw connections
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = 0.5;
+
+            // Connect particles to each other
+            for (let i = 0; i < particles.length; i++) {
+                const p1 = particles[i];
+                
+                // Connect to mouse if close
+                const dxMouse = mouseX - p1.x;
+                const dyMouse = mouseY - p1.y;
+                const distMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
+                if (distMouse < 200) {
+                     // Slightly push particles away from mouse for interaction
+                     p1.x -= dxMouse * 0.005;
+                     p1.y -= dyMouse * 0.005;
+
+                     ctx.beginPath();
+                     ctx.moveTo(p1.x, p1.y);
+                     ctx.lineTo(mouseX, mouseY);
+                     ctx.strokeStyle = `rgba(255, 255, 255, ${0.2 * (1 - distMouse / 200)})`;
+                     ctx.stroke();
+                }
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const dx = p1.x - p2.x;
+                    const dy = p1.y - p2.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        // Opacity based on distance
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${0.15 * (1 - distance / 150)})`;
+                        ctx.stroke();
+                        
+                        // Fill triangles (optional, adds "star/mesh" look)
+                        // Looking for a third point to form a triangle
+                         for (let k = j + 1; k < particles.length; k++) {
+                            const p3 = particles[k];
+                             const dist31 = Math.sqrt(Math.pow(p1.x - p3.x, 2) + Math.pow(p1.y - p3.y, 2));
+                             const dist32 = Math.sqrt(Math.pow(p2.x - p3.x, 2) + Math.pow(p2.y - p3.y, 2));
+                             
+                             if (dist31 < 100 && dist32 < 100) {
+                                  ctx.beginPath();
+                                  ctx.moveTo(p1.x, p1.y);
+                                  ctx.lineTo(p2.x, p2.y);
+                                  ctx.lineTo(p3.x, p3.y);
+                                  ctx.closePath();
+                                  ctx.fillStyle = `rgba(255, 255, 255, ${0.03 * (1 - Math.max(distance, dist31, dist32) / 100)})`;
+                                  ctx.fill();
+                             }
+                        }
+                    }
+                }
+                
+                // Draw particle
+                ctx.beginPath();
+                ctx.arc(p1.x, p1.y, p1.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.fill();
+            }
+
+            requestAnimationFrame(animate);
+        };
+
+        const animationId = requestAnimationFrame(animate);
+
+        return () => {
+            window.removeEventListener('resize', resize);
+            window.removeEventListener('mousemove', handleMouseMove);
+            cancelAnimationFrame(animationId);
+        };
     }, []);
 
     return (
-        <div className="absolute inset-0 z-0 bg-gradient-to-br from-zinc-900 via-neutral-900 to-stone-900 overflow-hidden">
-            <svg
-                className="absolute inset-0 w-full h-full opacity-30 text-white/10"
-                viewBox="0 0 100 100"
-                preserveAspectRatio="none"
-            >
-                <defs>
-                    <linearGradient id="grid-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="rgba(255,255,255,0.05)" />
-                        <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-                    </linearGradient>
-                </defs>
-                <path d="M0 100 V 80 Q 25 20 50 80 T 100 80 V 100 Z" fill="url(#grid-grad)" />
-            </svg>
-
-            {/* Floating Shapes Container */}
-            <div className="absolute inset-0 w-full h-full">
-
-                {/* Large Rotating Ring */}
-                <div
-                    className="absolute top-1/2 left-1/2 w-[80vh] h-[80vh] border border-white/5 rounded-full"
-                    style={{
-                        transform: `translate(-50%, -50%) translate(${mousePos.x * -30}px, ${mousePos.y * -30}px) rotate(${mousePos.x * 10}deg)`,
-                        transition: 'transform 0.4s ease-out'
-                    }}
-                ></div>
-
-                <div
-                    className="absolute top-1/2 left-1/2 w-[60vh] h-[60vh] border border-white/10 rounded-full animate-[spin_60s_linear_infinite]"
-                    style={{
-                        marginLeft: '-30vh',
-                        marginTop: '-30vh',
-                    }}
-                >
-                    <div className="absolute top-0 left-1/2 w-2 h-2 bg-white/20 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-                </div>
-
-                {/* Floating Tetrahedron (Triangle) */}
-                <div
-                     className="absolute top-1/4 left-1/4 opacity-20 animate-[bounce_8s_infinite] backdrop-blur-sm"
-                     style={{
-                        transform: `translate(${mousePos.x * 40}px, ${mousePos.y * 40}px) rotate(15deg)`,
-                        transition: 'transform 0.5s ease-out'
-                     }}
-                >
-                    <svg width="200" height="200" viewBox="0 0 100 100" className="stroke-white fill-transparent stroke-[0.5]">
-                        <path d="M50 10 L90 80 H10 Z" />
-                         <path d="M50 10 L50 90" className="stroke-[0.2]" />
-                    </svg>
-                </div>
-
-                {/* Floating Hexagon */}
-                <div
-                     className="absolute bottom-1/4 right-1/4 opacity-10 animate-pulse delay-1000"
-                     style={{
-                        transform: `translate(${mousePos.x * -60}px, ${mousePos.y * -60}px) rotate(-15deg)`,
-                        transition: 'transform 0.6s ease-out'
-                     }}
-                >
-                     <svg width="300" height="300" viewBox="0 0 100 100" className="stroke-white fill-transparent stroke-[0.5]">
-                        <path d="M25 5 L75 5 L100 50 L75 95 L25 95 L0 50 Z" />
-                    </svg>
-                </div>
-
-                {/* Connectors / Nodes */}
-                 <div
-                     className="absolute top-1/3 right-1/3 w-32 h-32 opacity-10"
-                      style={{
-                        transform: `translate(${mousePos.x * -20}px, ${mousePos.y * 50}px)`,
-                        transition: 'transform 0.7s ease-out'
-                     }}
-                 >
-                     <div className="absolute inset-0 border border-t-0 border-r-0 border-white/50 transform rotate-45"></div>
-                 </div>
-
-            </div>
-
-             {/* Animated Particles */}
-             {[...Array(5)].map((_, i) => (
-                <div
-                    key={i}
-                    className="absolute w-1 h-1 bg-white/30 rounded-full animate-[ping_4s_cubic-bezier(0,0,0.2,1)_infinite]"
-                    style={{
-                        top: `${Math.random() * 80 + 10}%`,
-                        left: `${Math.random() * 80 + 10}%`,
-                        animationDelay: `${i * 0.8}s`
-                    }}
-                />
-            ))}
+        <div ref={containerRef} className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-neutral-900 to-stone-900 overflow-hidden">
+             <canvas 
+                ref={canvasRef} 
+                className="absolute inset-0 w-full h-full block"
+            />
+            {/* Overlay gradient to blend with content below if needed */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none"></div>
         </div>
     );
 };

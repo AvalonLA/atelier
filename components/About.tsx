@@ -4,6 +4,7 @@ import { useConfig } from "../context/ConfigContext";
 import { InventoryService, supabase } from "../services/supabase";
 import { optimizeImage } from "../utils/imageOptimizer";
 import RichTextEditor from "./ui/RichTextEditor";
+import { ScrollReveal } from "./ui/ScrollReveal";
 
 const About: React.FC = () => {
   const { config, updateLocalConfig } = useConfig();
@@ -233,7 +234,7 @@ const About: React.FC = () => {
         <div className="max-w-7xl mx-auto space-y-32">
           {(isEditing ? editValues.items : config.about_history || []).map(
             (item: any, index: number) => (
-              <div
+              <ScrollReveal
                 key={index}
                 className={`flex flex-col lg:flex-row items-center gap-12 lg:gap-24 ${index % 2 !== 0 ? "lg:flex-row-reverse" : ""} relative`}
               >
@@ -271,7 +272,11 @@ const About: React.FC = () => {
                   {isEditing && (
                     <button
                       onClick={() => handleDeleteItem(index)}
-                      className="absolute -top-10 right-0 lg:-left-10 text-red-500 hover:text-red-400 p-2"
+                      className={`absolute -top-10 text-red-500 hover:text-red-400 p-2 z-20 ${
+                        index % 2 === 0
+                          ? "right-0 lg:-left-10"
+                          : "right-0 lg:-right-10"
+                      }`}
                       title="Eliminar Hito"
                     >
                       <svg
@@ -337,7 +342,7 @@ const About: React.FC = () => {
 
                   <div className="w-12 h-[1px] bg-white/20 mx-auto lg:mx-0"></div>
                 </div>
-              </div>
+              </ScrollReveal>
             ),
           )}
 
