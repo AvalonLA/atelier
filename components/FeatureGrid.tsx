@@ -74,7 +74,7 @@ const ExpandingGridRow: React.FC<{
                 </p>
                 {p.sale_price ? (
                   <div className="flex items-center gap-3">
-                    <p className="font-futuristic text-lg lg:text-xl font-bold text-red-500">
+                    <p className="font-futuristic text-lg lg:text-xl font-bold text-white">
                       ${p.sale_price.toLocaleString()}
                     </p>
                     {p.price && (
