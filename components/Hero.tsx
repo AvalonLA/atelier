@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useConfig } from "../context/ConfigContext";
 import { InventoryService, supabase } from "../services/supabase";
 import { optimizeImage } from "../utils/imageOptimizer";
+import { FloatingGeometryHero } from "./ui/FloatingGeometryHero";
 import RichTextEditor from "./ui/RichTextEditor";
 
 const Hero: React.FC = () => {
@@ -216,16 +217,23 @@ const Hero: React.FC = () => {
           transform: `scale(${scale})`,
         }}
       >
-        <img
-          src={
-            isEditing
-              ? editValues.imageUrl
-              : config.hero_image_url || "/images/hero.jpg"
-          }
-          alt="ATELIER Modern Lighting"
-          className="w-full h-full object-cover opacity-50 transition-all duration-500" // Removed scale-110 as it is handled by parent style now
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black"></div>
+        {isEditing && editValues.imageUrl ? (
+          <img
+             src={editValues.imageUrl}
+             alt="ATELIER Modern Lighting"
+             className="w-full h-full object-cover opacity-50 transition-all duration-500"
+          />
+        ) : config.hero_image_url && config.hero_image_url !== '/images/hero.jpg' ? (
+           <img
+             src={config.hero_image_url}
+             alt="ATELIER Modern Lighting"
+             className="w-full h-full object-cover opacity-50 transition-all duration-500"
+          />
+        ) : (
+           <FloatingGeometryHero />
+        )}
+        
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black pointer-events-none"></div>
       </div>
 
       <div
