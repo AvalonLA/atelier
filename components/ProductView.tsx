@@ -5,6 +5,7 @@ import { useConfig } from "../context/ConfigContext";
 import { GeminiService } from "../services/geminiService";
 import { ConsultationService } from "../services/supabase";
 import { Product } from "../types";
+import { ImageWithLoader } from "./ui/ImageWithLoader";
 
 interface ProductViewProps {
   product: Product;
@@ -280,11 +281,12 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
             </>
           )}
 
-          <img
+          <ImageWithLoader
             src={fullscreenImage}
             className="max-w-full max-h-full object-contain shadow-2xl"
             alt="Fullscreen view"
             onClick={(e) => e.stopPropagation()}
+            containerClassName="bg-transparent flex items-center justify-center w-full h-full"
           />
 
           {allImages.length > 1 && (
@@ -323,14 +325,15 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
       </nav>
 
       <section className="relative h-[90vh] flex items-end p-8 md:p-20 overflow-hidden group/hero">
-        <img
+        <ImageWithLoader
           key={galleryIndex}
           src={allImages[galleryIndex]}
           alt={product.name}
-          className="absolute inset-0 w-full h-full object-cover scale-105 cursor-zoom-in animate-in fade-in duration-500"
+          className="w-full h-full object-cover scale-105 cursor-zoom-in animate-in fade-in duration-500"
           onClick={() => setFullscreenImage(allImages[galleryIndex])}
+          containerClassName="absolute inset-0 w-full h-full"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent pointer-events-none"></div>
 
         <div className="relative z-10 w-full">
           <h1 className="font-futuristic text-5xl md:text-[10rem] leading-[0.85] tracking-tighter mb-8 font-extralight uppercase pointer-events-none">

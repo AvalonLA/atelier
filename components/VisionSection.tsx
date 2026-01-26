@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useConfig } from "../context/ConfigContext";
 import { InventoryService, supabase } from "../services/supabase";
 import { optimizeImage } from "../utils/imageOptimizer";
+import { ImageWithLoader } from "./ui/ImageWithLoader";
 import RichTextEditor from "./ui/RichTextEditor";
 
 const VisionSection: React.FC = () => {
@@ -199,13 +200,13 @@ const VisionSection: React.FC = () => {
       )}
 
       <div
-        className="absolute inset-0 w-full h-[120%] -top-[10%] object-cover pointer-events-none transition-opacity duration-500"
+        className="absolute inset-0 w-full h-[120%] -top-[10%] pointer-events-none transition-opacity duration-500"
         style={{
           transform: `translateY(${offsetY}px)`,
           willChange: "transform",
         }}
       >
-        <img
+        <ImageWithLoader
           src={
             isEditing
               ? editValues.imageUrl
@@ -214,6 +215,7 @@ const VisionSection: React.FC = () => {
           }
           alt="Futuristic architectural view"
           className="w-full h-full object-cover opacity-30"
+          containerClassName="w-full h-full"
         />
       </div>
 

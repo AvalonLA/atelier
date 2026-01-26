@@ -7,6 +7,7 @@ import { useProducts } from "../hooks/useProducts";
 import { supabase } from "../services/supabase";
 import { Product } from "../types";
 import { optimizeImage } from "../utils/imageOptimizer";
+import { ImageWithLoader } from "./ui/ImageWithLoader";
 import RichTextEditor from "./ui/RichTextEditor";
 
 const ExpandingGridRow: React.FC<{
@@ -30,10 +31,11 @@ const ExpandingGridRow: React.FC<{
           onMouseEnter={() => setExpandedIndex(i)}
           className={`group relative ${expandedIndex === i ? "flex-[3]" : "flex-[1]"} min-w-0 h-full transition-all duration-500 ease-in-out overflow-hidden border-r last:border-0 border-white/10 cursor-pointer`}
         >
-          <img
+          <ImageWithLoader
             src={p.image}
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
             alt={p.name}
+            containerClassName="absolute inset-0 w-full h-full"
           />
           <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors" />
 
