@@ -19,7 +19,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
   const [clarification, setClarification] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [resultImage, setResultImage] = useState<string | null>(null);
-  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<{ src: string; index: number } | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<string>("day");
   const [galleryIndex, setGalleryIndex] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -94,36 +94,29 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
   }, [onClose]);
 
   const allImages = useMemo(
-    () => [product.image, ...product.gallery],
+    () => Array.from(new Set([product.image, ...product.gallery])),
     [product],
   );
 
   // Handle keys for fullscreen modal (ESC + Arrows)
   useEffect(() => {
-    if (!fullscreenImage) return;
+    if (!lightbox) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setFullscreenImage(null);
-      } else if (e.key === "ArrowRight") {
-        const currentIndex = allImages.indexOf(fullscreenImage);
-        if (currentIndex !== -1) {
-          const nextIndex = (currentIndex + 1) % allImages.length;
-          setFullscreenImage(allImages[nextIndex]);
-        }
-      } else if (e.key === "ArrowLeft") {
-        const currentIndex = allImages.indexOf(fullscreenImage);
-        if (currentIndex !== -1) {
-          const prevIndex =
-            (currentIndex - 1 + allImages.length) % allImages.length;
-          setFullscreenImage(allImages[prevIndex]);
-        }
+        setLightbox(null);
+      } else if (e.key === "ArrowRight" && lightbox.index !== -1) {
+        const nextIndex = (lightbox.index + 1) % allImages.length;
+        setLightbox({ src: allImages[nextIndex], index: nextIndex });
+      } else if (e.key === "ArrowLeft" && lightbox.index !== -1) {
+        const prevIndex = (lightbox.index - 1 + allImages.length) % allImages.length;
+        setLightbox({ src: allImages[prevIndex], index: prevIndex });
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [fullscreenImage, allImages]);
+  }, [lightbox, allImages]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -204,10 +197,10 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
       <div className="fixed top-0 left-0 w-full h-24 bg-black z-[-1]" />
       {/* Fullscreen Image Modal */}
 
-      {fullscreenImage && (
+      {lightbox && (
         <div
           className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center p-4 md:p-10 cursor-zoom-out animate-in fade-in zoom-in-95 duration-300"
-          onClick={() => setFullscreenImage(null)}
+          onClick={() => setLightbox(null)}
         >
           <button className="absolute top-10 right-10 text-white hover:rotate-90 transition-transform duration-300 z-[220]">
             <svg
@@ -225,18 +218,14 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
             </svg>
           </button>
 
-          {allImages.length > 1 && (
+          {allImages.length > 1 && lightbox.index !== -1 && (
             <>
               <button
                 className="absolute left-4 md:left-10 text-white p-4 hover:bg-white/10 rounded-full transition-colors z-[210]"
                 onClick={(e) => {
                   e.stopPropagation();
-                  const currentIndex = allImages.indexOf(fullscreenImage);
-                  if (currentIndex !== -1) {
-                    const prevIndex =
-                      (currentIndex - 1 + allImages.length) % allImages.length;
-                    setFullscreenImage(allImages[prevIndex]);
-                  }
+                  const prevIndex = (lightbox.index - 1 + allImages.length) % allImages.length;
+                  setLightbox({ src: allImages[prevIndex], index: prevIndex });
                 }}
               >
                 <svg
@@ -257,11 +246,8 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
                 className="absolute right-4 md:right-10 text-white p-4 hover:bg-white/10 rounded-full transition-colors z-[210]"
                 onClick={(e) => {
                   e.stopPropagation();
-                  const currentIndex = allImages.indexOf(fullscreenImage);
-                  if (currentIndex !== -1) {
-                    const nextIndex = (currentIndex + 1) % allImages.length;
-                    setFullscreenImage(allImages[nextIndex]);
-                  }
+                  const nextIndex = (lightbox.index + 1) % allImages.length;
+                  setLightbox({ src: allImages[nextIndex], index: nextIndex });
                 }}
               >
                 <svg
@@ -282,17 +268,17 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
           )}
 
           <ImageWithLoader
-            src={fullscreenImage}
+            src={lightbox.src}
             className="max-w-full max-h-full object-contain shadow-2xl"
             alt="Fullscreen view"
             onClick={(e) => e.stopPropagation()}
             containerClassName="bg-transparent flex items-center justify-center w-full h-full"
           />
 
-          {allImages.length > 1 && (
+          {allImages.length > 1 && lightbox.index !== -1 && (
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[220] pointer-events-none">
               <span className="font-futuristic text-[10px] tracking-[0.3em] text-white/50">
-                {allImages.indexOf(fullscreenImage!) + 1} / {allImages.length}
+                {lightbox.index + 1} / {allImages.length}
               </span>
             </div>
           )}
@@ -324,13 +310,12 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
         </span>
       </nav>
 
-      <section className="relative h-[90vh] flex items-end p-8 md:p-20 overflow-hidden group/hero">
+      <section className="relative w-full h-screen flex items-end p-8 md:p-20 overflow-hidden group/hero">
         <ImageWithLoader
-          key={galleryIndex}
-          src={allImages[galleryIndex]}
+          src={product.image}
           alt={product.name}
-          className="w-full h-full object-cover scale-105 cursor-zoom-in animate-in fade-in duration-500"
-          onClick={() => setFullscreenImage(allImages[galleryIndex])}
+          className="w-full h-full object-cover scale-105 animate-in fade-in duration-500"
+          onClick={() => {}}
           containerClassName="absolute inset-0 w-full h-full"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent pointer-events-none"></div>
@@ -351,7 +336,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
             <div className="space-y-16">
               <div>
-                <h3 className="font-futuristic text-[10px] tracking-[0.5em] text-neutral-400 mb-8 uppercase">
+                <h3 className="font-futuristic text-[10px] tracking-[0.5em] text-neutral-600 mb-8 uppercase">
                   ESPECIFICACIONES
                 </h3>
                 <p className="text-2xl md:text-3xl font-light leading-snug mb-12">
@@ -360,7 +345,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
                 <div className="grid grid-cols-2 gap-12">
                   {product.specs.map((spec, i) => (
                     <div key={i} className="border-t border-black/10 pt-6">
-                      <span className="font-futuristic text-[9px] tracking-widest text-neutral-400 block mb-2">
+                      <span className="font-futuristic text-[9px] tracking-widest text-neutral-600 block mb-2">
                         {spec.label}
                       </span>
                       <span className="text-sm font-medium">{spec.value}</span>
@@ -384,7 +369,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
                       <span className="text-3xl font-light text-red-600">
                         ${product.sale_price.toLocaleString()}
                       </span>
-                      <span className="text-xl line-through text-neutral-400">
+                      <span className="text-xl line-through text-neutral-500">
                         $
                         {product.price ? product.price.toLocaleString() : "999"}
                       </span>
@@ -429,7 +414,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
                 </div>
               </div>
 
-              <div className="text-[10px] text-neutral-400 font-light space-y-2 pt-4 border-t border-black/5">
+              <div className="text-[10px] text-neutral-600 font-light space-y-2 pt-4 border-t border-black/5">
                 <div className="flex gap-4">
                   <button
                     onClick={() => {
@@ -489,11 +474,12 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
           </div>
 
           <div className="grid grid-cols-1 gap-8">
-            {product.gallery.map((img, idx) => (
+            <h3 className="font-futuristic text-[10px] tracking-[0.5em] text-neutral-600 mb-0 uppercase">Galería</h3>
+            {allImages.map((img, idx) => (
               <div
                 key={idx}
-                className="aspect-video bg-neutral-100 overflow-hidden group border border-black/5 cursor-zoom-in"
-                onClick={() => setFullscreenImage(img)}
+                className="aspect-video bg-neutral-100 overflow-hidden group border border-black/5 cursor-pointer"
+                onClick={() => setLightbox({ src: img, index: idx })} 
               >
                 <img
                   src={img}
@@ -506,7 +492,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
 
           {/* AI Room Visualizer Section */}
           <div className="border-t border-black/10 pt-24">
-            <h3 className="font-futuristic text-[10px] tracking-[0.5em] text-neutral-400 mb-12 uppercase text-center">
+            <h3 className="font-futuristic text-[10px] tracking-[0.5em] text-neutral-600 mb-12 uppercase text-center">
               AI ROOM VISUALIZER
             </h3>
 
@@ -514,7 +500,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
               {/* Controls Column */}
               <div className="space-y-8">
                 {!config.ai_active ? (
-                  <div className="h-full flex items-center justify-center border border-dashed border-neutral-300 dark:border-white/10 p-12 text-center text-neutral-400">
+                  <div className="h-full flex items-center justify-center border border-dashed border-neutral-300 dark:border-white/10 p-12 text-center text-neutral-600">
                     <div className="space-y-4">
                       <svg
                         className="w-8 h-8 mx-auto opacity-50"
@@ -561,7 +547,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
                               d="M12 4v16m8-8H4"
                             />
                           </svg>
-                          <span className="font-futuristic text-[9px] tracking-widest text-neutral-400 block">
+                          <span className="font-futuristic text-[9px] tracking-widest text-neutral-600 block">
                             SUBIR_FOTO_ESPACIO
                           </span>
                         </div>
@@ -579,7 +565,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
                     {userImage && (
                       <div className="space-y-8 animate-in fade-in slide-in-from-top-4">
                         <div className="space-y-4">
-                          <label className="font-futuristic text-[8px] tracking-[0.3em] text-neutral-400 uppercase block">
+                          <label className="font-futuristic text-[8px] tracking-[0.3em] text-neutral-600 uppercase block">
                             1. VISIÓN_ALGORÍTMICA
                           </label>
                           <textarea
@@ -591,7 +577,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
                         </div>
 
                         <div className="space-y-4">
-                          <label className="font-futuristic text-[8px] tracking-[0.3em] text-neutral-400 uppercase block">
+                          <label className="font-futuristic text-[8px] tracking-[0.3em] text-neutral-600 uppercase block">
                             2. ESCENA_LUMÍNICA
                           </label>
                           <div className="grid grid-cols-3 gap-4">
@@ -656,7 +642,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
                     <img
                       src={resultImage}
                       className="w-full h-full object-cover cursor-zoom-in"
-                      onClick={() => setFullscreenImage(resultImage)}
+                      onClick={() => setLightbox({ src: resultImage, index: -1 })}
                     />
                     <button
                       onClick={handleDownload}
