@@ -47,6 +47,8 @@ export interface Order {
   lastName: string;
   email: string;
   address: string;
+  city?: string;
+  zipCode?: string;
   status: "pending" | "processed" | "shipped" | "delivered" | "cancelled";
   items?: SaleItem[];
 }

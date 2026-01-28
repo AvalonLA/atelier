@@ -250,7 +250,7 @@ const About: React.FC = () => {
                         <input
                           type="file"
                           hidden
-                          ref={(el) => (fileRefs.current[index] = el)}
+                          ref={(el) => { if (el) fileRefs.current[index] = el; }}
                           onChange={(e) => handleImageUpload(e, index)}
                           accept="image/*"
                         />
