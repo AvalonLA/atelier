@@ -30,7 +30,7 @@ export class GeminiService {
     try {
       const ai = this.getAI();
       const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash-exp",
+        model: "gemini-3-flash-preview",
         contents: [...history, { role: "user", parts: [{ text: prompt }] }],
         config: {
           systemInstruction: `Eres 'ATELIER AI', un consultor de iluminación arquitectónica para ATELIER.
@@ -65,9 +65,7 @@ export class GeminiService {
 
   /**
    * Generates a simulation of the product in the user's room.
-   * 1. Analyses the room and product using Gemini 1.5 Flash.
-   * 2. Generates a new image description.
-   * 3. Uses a generative image model to create the visual.
+   * Uses gemini-3-pro-image-preview for direct contextual image editing/placement.
    */
   static async visualizeLighting(
     roomImageBase64: string,
@@ -83,27 +81,6 @@ export class GeminiService {
     try {
       const ai = this.getAI();
 
-      // Step 1: Describe the composition
-      const analysisPrompt = `
-            Act as an expert interior designer and 3D visualizer.
-            I will provide two images:
-            1. An image of a room (The Base).
-            2. An image of a lighting product (The Object).
-
-            User Request: "${userPrompt}"
-
-            TASK:
-            Create a highly detailed Prompt for an AI Image Generator to generate a PHOTO-REALISTIC image of this EXACT room but with the lighting product installed in a natural, logical position (ceiling for pendant, floor for floor lamp, etc).
-            
-            The new image must:
-            - Maintain the same style, colors, and furniture of the room.
-            - Show the product clearly.
-            - Apply the lighting effects requested (day/night/sunset).
-            - BE REALISTIC.
-            
-            Return ONLY the Prompt text in English.
-        `;
-
       const cleanRoom = roomImageBase64.includes(",")
         ? roomImageBase64.split(",")[1]
         : roomImageBase64;
@@ -111,63 +88,36 @@ export class GeminiService {
         ? productImageBase64.split(",")[1]
         : productImageBase64;
 
-      const descriptionResult = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
-        contents: [
-          {
-            role: "user",
-            parts: [
-              { text: analysisPrompt },
-              {
-                inlineData: {
-                  mimeType: "image/jpeg",
-                  data: cleanRoom,
-                },
+      const response = await ai.models.generateContent({
+        model: "gemini-3-pro-image-preview",
+        contents: {
+          parts: [
+            {
+              inlineData: {
+                data: cleanRoom,
+                mimeType: "image/jpeg",
               },
-              {
-                inlineData: {
-                  mimeType: "image/jpeg",
-                  data: cleanProduct,
-                },
+            },
+            {
+              inlineData: {
+                data: cleanProduct,
+                mimeType: "image/jpeg",
               },
-            ],
-          },
-        ],
+            },
+            {
+              text: `Image 1 is a photo of my room. Image 2 is the "${productName}" lighting product. Please realistically place the product from Image 2 into the room shown in Image 1. Maintain perspective, lighting, and shadow consistency. Additional instructions: ${userPrompt}`,
+            },
+          ],
+        },
       });
 
-      const imagePrompt = descriptionResult.text();
-      console.log("Generated Prompt for Image:", imagePrompt);
-
-      // Step 2: Generate the Image
-      try {
-        const imageResponse = await ai.models.generateContent({
-          model: "gemini-3-pro-image-preview",
-          contents: {
-            parts: [
-              {
-                text: imagePrompt,
-              },
-            ],
-          },
-          config: {
-            imageConfig: {
-              aspectRatio: "1:1",
-              imageSize: "1024x1024",
-            },
-          },
-        });
-
-        for (const part of imageResponse.candidates?.[0]?.content?.parts || []) {
-          if (part.inlineData) {
-            return `data:image/png;base64,${part.inlineData.data}`;
-          }
+      for (const part of response.candidates?.[0]?.content?.parts || []) {
+        if (part.inlineData) {
+          return `data:image/png;base64,${part.inlineData.data}`;
         }
-
-        return roomImageBase64;
-      } catch (e) {
-        console.error("Image gen failed", e);
-        return roomImageBase64;
       }
+
+      return roomImageBase64;
     } catch (error) {
       console.error("Gemini Vision Error:", error);
       return roomImageBase64;
