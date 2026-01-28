@@ -31,6 +31,10 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
     query: "Hola quisiera tener mas información sobre este producto",
   });
 
+  const [customMessage, setCustomMessage] = useState(
+    `Hola, estoy interesado en ${product.name}.`
+  );
+
   const handleConsultationSubmit = async () => {
     if (!consultationForm.customerName.trim()) {
       toast.error("POR FAVOR INGRESA TU NOMBRE");
@@ -56,14 +60,8 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
     }
   };
 
-  // Close on ESC or click outside
+  // Close on click outside
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
       const target = e.target as Node;
       // Check if click is inside the floating assistant
@@ -82,12 +80,10 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("touchstart", handleClickOutside);
 
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("touchstart", handleClickOutside);
     };
@@ -311,12 +307,10 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
       </nav>
 
       <section className="relative w-full h-screen flex items-end p-8 md:p-20 overflow-hidden group/hero">
-        <ImageWithLoader
+        <img
           src={product.image}
           alt={product.name}
-          className="w-full h-full object-cover scale-105 animate-in fade-in duration-500"
-          onClick={() => {}}
-          containerClassName="absolute inset-0 w-full h-full"
+          className="absolute inset-0 w-full h-full object-cover scale-105 animate-in fade-in duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent pointer-events-none"></div>
 
@@ -415,13 +409,17 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
               </div>
 
               <div className="text-[10px] text-neutral-600 font-light space-y-2 pt-4 border-t border-black/5">
+                <textarea
+                  className="w-full bg-transparent border border-black/10 p-3 text-xs font-light text-neutral-600 outline-none focus:border-black/30 transition-colors resize-none mb-2"
+                  rows={3}
+                  value={customMessage}
+                  onChange={(e) => setCustomMessage(e.target.value)}
+                />
                 <div className="flex gap-4">
                   <button
                     onClick={() => {
                       const phone = config.contact_phone.replace(/\D/g, "");
-                      const text = encodeURIComponent(
-                        `Hola, estoy interesado en ${product.name}.`,
-                      );
+                      const text = encodeURIComponent(customMessage);
                       window.open(
                         `https://wa.me/${phone}?text=${text}`,
                         "_blank",
@@ -443,7 +441,7 @@ const ProductView: React.FC<ProductViewProps> = ({ product, onClose }) => {
                       // Logic to open AI assistant with product context
                       const event = new CustomEvent("open-ai-assistant", {
                         detail: {
-                          initialMessage: `Hola, me gustaría saber más sobre el producto ${product.name}. ¿Qué detalles técnicos o de diseño puedes darme?`,
+                          initialMessage: customMessage,
                         },
                       });
                       window.dispatchEvent(event);
