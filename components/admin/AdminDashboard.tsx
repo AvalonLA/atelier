@@ -9,6 +9,8 @@ export const AdminDashboard: React.FC = () => {
     consultations: 0,
     lowStock: 0,
   });
+  const [latestOrders, setLatestOrders] = useState<any[]>([]);
+  const [latestConsultations, setLatestConsultations] = useState<any[]>([]);
 
   useEffect(() => {
     InventoryService.getProducts().then(setProducts).catch(console.error);
@@ -29,11 +31,25 @@ export const AdminDashboard: React.FC = () => {
         .select("*", { count: "exact", head: true })
         .lt("stock", 5);
 
+      const { data: ordersData } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      const { data: consultationsData } = await supabase
+        .from("consultations")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(5);
+
       setCounts({
         orders: ordersCount || 0,
         consultations: consultationsCount || 0,
         lowStock: lowStockCount || 0,
       });
+      setLatestOrders(ordersData || []);
+      setLatestConsultations(consultationsData || []);
     };
 
     fetchCounts();
@@ -71,6 +87,10 @@ export const AdminDashboard: React.FC = () => {
       return { name, value, percentage };
     },
   );
+
+  const topProducts = products
+    .sort((a, b) => (b.price * b.stock) - (a.price * a.stock))
+    .slice(0, 5);
 
   // Simple Conic Gradient For Pie Chart
   let currentAngle = 0;
@@ -116,7 +136,7 @@ export const AdminDashboard: React.FC = () => {
               currency: "USD",
               maximumFractionDigits: 0,
             }).format(stockValue),
-            change: "ESTIMATED...",
+            change: "",
             alert: false,
           },
           {
@@ -223,38 +243,102 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Bar Chart Mockup (CSS only) */}
+        {/* Top Products Chart */}
         <div className="p-8 md:p-12 border border-black/5 dark:border-white/5 bg-neutral-50 dark:bg-black/20 flex flex-col">
           <h3 className="font-futuristic text-[10px] tracking-[0.3em] uppercase mb-12 dark:text-white text-black">
-            RENDIMIENTO_MENSUAL
+            TOP_PRODUCTOS_VALOR
           </h3>
           <div className="flex-1 flex items-end justify-between gap-4 h-48 w-full border-b border-black/10 dark:border-white/10 pb-4">
-            {[40, 65, 30, 85, 50, 75, 90, 60, 45, 80, 55, 70].map((h, i) => (
-              <div
-                key={i}
-                className="relative group flex-1 bg-neutral-200 dark:bg-neutral-800 rounded-t hover:bg-black dark:hover:bg-white transition-all duration-500"
-                style={{ height: `${h}%` }}
-              >
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black dark:bg-white text-white dark:text-black text-[9px] py-1 px-2 rounded">
-                  {h}%
+            {topProducts.map((p, i) => {
+              const value = p.price * p.stock;
+              const maxValue = Math.max(...topProducts.map(p => p.price * p.stock));
+              const height = maxValue > 0 ? (value / maxValue) * 100 : 0;
+              return (
+                <div
+                  key={i}
+                  className="relative group flex-1 bg-gray-500 dark:bg-gray-400 rounded-t hover:bg-black dark:hover:bg-white transition-all duration-500"
+                  style={{ height: `${height}%` }}
+                >
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black dark:bg-white text-white dark:text-black text-[9px] py-1 px-2 rounded">
+                    {value.toFixed(0)} USD
+                  </div>
                 </div>
+              );
+            })}
+          </div>
+          <div className="flex justify-between mt-4 text-[9px] font-futuristic text-neutral-400">
+            {topProducts.map((p, i) => (
+              <span key={i}>{p.name.slice(0, 3).toUpperCase()}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16">
+        {/* Latest Orders */}
+        <div className="p-8 md:p-12 border border-black/5 dark:border-white/5 bg-neutral-50 dark:bg-black/20">
+          <h3 className="font-futuristic text-[10px] tracking-[0.3em] uppercase mb-12 dark:text-white text-black">
+            ÚLTIMAS ÓRDENES
+          </h3>
+          <div className="space-y-4">
+            {latestOrders.map((order, i) => (
+              <div key={i} className="flex justify-between items-center py-2 border-b border-black/5 dark:border-white/5">
+                <span className="text-sm">{new Date(order.created_at).toLocaleDateString()}</span>
+                <span className="text-sm font-bold">{order.total ? `${order.total} USD` : '0 USD'}</span>
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-4 text-[9px] font-futuristic text-neutral-400">
-            <span>ENE</span>
-            <span>FEB</span>
-            <span>MAR</span>
-            <span>ABR</span>
-            <span>MAY</span>
-            <span>JUN</span>
-            <span className="hidden md:inline">JUL</span>
-            <span className="hidden md:inline">AGO</span>
-            <span className="hidden md:inline">SEP</span>
-            <span className="hidden md:inline">OCT</span>
-            <span className="hidden md:inline">NOV</span>
-            <span className="hidden md:inline">DIC</span>
+        </div>
+
+        {/* Latest Consultations */}
+        <div className="p-8 md:p-12 border border-black/5 dark:border-white/5 bg-neutral-50 dark:bg-black/20">
+          <h3 className="font-futuristic text-[10px] tracking-[0.3em] uppercase mb-12 dark:text-white text-black">
+            ÚLTIMAS CONSULTAS
+          </h3>
+          <div className="space-y-4">
+            {latestConsultations.map((consult, i) => (
+              <div key={i} className="flex justify-between items-center py-2 border-b border-black/5 dark:border-white/5">
+                <span className="text-sm font-mono">{consult.name || consult.email}</span>
+                <span className="text-sm">{new Date(consult.created_at).toLocaleDateString()}</span>
+                <span className="text-sm">{consult.status}</span>
+              </div>
+            ))}
           </div>
+        </div>
+      </div>
+
+      {/* Monthly Performance Chart */}
+      <div className="p-8 md:p-12 border border-black/5 dark:border-white/5 bg-neutral-50 dark:bg-black/20 flex flex-col">
+        <h3 className="font-futuristic text-[10px] tracking-[0.3em] uppercase mb-12 dark:text-white text-black">
+          RENDIMIENTO_MENSUAL
+        </h3>
+        <div className="flex-1 flex items-end justify-between gap-4 h-48 w-full border-b border-black/10 dark:border-white/10 pb-4">
+          {[40, 65, 30, 85, 50, 75, 90, 60, 45, 80, 55, 70].map((h, i) => (
+            <div
+              key={i}
+              className="relative group flex-1 bg-gray-500 dark:bg-gray-400 rounded-t hover:bg-black dark:hover:bg-white transition-all duration-500"
+              style={{ height: `${h}%` }}
+            >
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black dark:bg-white text-white dark:text-black text-[9px] py-1 px-2 rounded">
+                {h}%
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-between mt-4 text-[9px] font-futuristic text-neutral-400">
+          <span>ENE</span>
+          <span>FEB</span>
+          <span>MAR</span>
+          <span>ABR</span>
+          <span>MAY</span>
+          <span>JUN</span>
+          <span className="hidden md:inline">JUL</span>
+          <span className="hidden md:inline">AGO</span>
+          <span className="hidden md:inline">SEP</span>
+          <span className="hidden md:inline">OCT</span>
+          <span className="hidden md:inline">NOV</span>
+          <span className="hidden md:inline">DIC</span>
         </div>
       </div>
     </div>
