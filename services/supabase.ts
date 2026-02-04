@@ -28,7 +28,6 @@ export const supabase = createClient(
 
 // Helper for proxy calls removed as we are using direct calls with upsert
 
-
 export const InventoryService = {
   async getProducts() {
     const { data, error } = await supabase
@@ -135,9 +134,9 @@ export const ConsultationService = {
       .select("*")
       .eq("id", id)
       .single();
-      
+
     if (fetchError) throw fetchError;
-    
+
     const updated = { ...current, status };
 
     const { data, error } = await supabase
@@ -231,9 +230,9 @@ export const OrderService = {
       .select("*")
       .eq("id", id)
       .single();
-      
+
     if (fetchError) throw fetchError;
-    
+
     const updated = { ...current, status };
 
     const { data, error } = await supabase
@@ -276,7 +275,7 @@ export const ConfigService = {
     const existing = await this.getConfig();
 
     if (existing && existing.id) {
-       // Merge updates with current data
+      // Merge updates with current data
       const updatedConfig = { ...existing, ...updates };
 
       const { data, error } = await supabase
