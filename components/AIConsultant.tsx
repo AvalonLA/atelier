@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { getDesignAdvice } from "../services/geminiService";
+import { GeminiService } from "../services/geminiService";
 import { ChatMessage } from "../types";
 
 const AIConsultant: React.FC = () => {
@@ -32,7 +32,7 @@ const AIConsultant: React.FC = () => {
       parts: [{ text: m.text }],
     }));
 
-    const response = await getDesignAdvice(userMsg, history);
+    const response = await GeminiService.getDesignAdvice(userMsg, history);
 
     setIsTyping(false);
     setMessages((prev) => [...prev, { role: "model", text: response || "" }]);
